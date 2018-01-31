@@ -1,0 +1,1 @@
+Regular module for KTaNE, based on the Rubik's Clock.
