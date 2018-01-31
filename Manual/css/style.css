@@ -1,0 +1,9 @@
+table.no-td-borders {
+	margin-left: auto;
+	margin-right: auto;
+}
+table.no-td-borders > tbody > tr > td {
+	text-align: center;
+	border: none;
+	padding: .5rem;
+}
