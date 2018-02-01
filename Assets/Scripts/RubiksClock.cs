@@ -7,6 +7,9 @@ public class RubiksClock : MonoBehaviour {
 
     public KMSelectable[] buttons;
     public GameObject[] clocks;
+    public KMSelectable[] pins;
+    private Boolean[] pinsStatus;
+
     /**
      * JSON clock data
 [
@@ -61,10 +64,23 @@ public class RubiksClock : MonoBehaviour {
     void Start () {
         for (int i = 0; i < buttons.Length; i++)
         {
-            Debug.Log("button " + i);
             var j = i;
             buttons[i].OnInteract += delegate () { OnPressButton(j); return false; };
         }
+        //pinsStatus = new Boolean[pins.Length];
+        for (int i = 0; i < pins.Length; i++)
+        {
+            var j = i;
+            pins[i].OnInteract += delegate () { OnChangePin(j); return false; };
+            //pinsStatus[i] = true;
+        }
+    }
+
+    private void OnChangePin(int i)
+    {
+        Debug.Log("Pin " + i + " changed");
+        //pinsStatus[i] = !pinsStatus[i];
+        //pins[i].transform.Translate(0, 1.4f * (pinsStatus[i] ? -1 : 1), 0);
     }
 
     // Update is called once per frame
@@ -74,7 +90,7 @@ public class RubiksClock : MonoBehaviour {
 
     private void OnPressButton(int i)
     {
-        Debug.Log(i + " pressed");
+        Debug.Log("Button " + i + " pressed");
         clocks[i].transform.Rotate(0, 30, 0);
     }
 }
