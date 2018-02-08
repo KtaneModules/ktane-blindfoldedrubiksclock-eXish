@@ -50,7 +50,7 @@ public class RubiksClock : MonoBehaviour
 			return false;
 		};
 
-		targetRotation = clockPuzzle.transform.rotation;
+		targetRotation = clockPuzzle.transform.localRotation;
 	}
 
 	private void TurnOverToOtherSide()
@@ -58,7 +58,8 @@ public class RubiksClock : MonoBehaviour
 		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
 		GetComponent<KMSelectable>().AddInteractionPunch();
 
-		targetRotation *= Quaternion.AngleAxis(180, Vector3.forward);
+		//targetRotation *= Quaternion.AngleAxis(180, Vector3.forward);
+		clockPuzzle.transform.localRotation *= Quaternion.AngleAxis(180, Vector3.forward);
 	}
 
 	private void OnChangePin(int i)
@@ -73,7 +74,7 @@ public class RubiksClock : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		clockPuzzle.transform.rotation = Quaternion.Lerp(clockPuzzle.transform.rotation, targetRotation, 5 * Time.deltaTime); 
+		clockPuzzle.transform.localRotation = Quaternion.Lerp(clockPuzzle.transform.localRotation, targetRotation, 5 * Time.deltaTime); 
 	}
 
 	private void OnPressButton(int i)
