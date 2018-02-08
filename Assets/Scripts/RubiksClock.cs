@@ -13,6 +13,48 @@ public class RubiksClock : MonoBehaviour
 	private Boolean[] pin;
 	private int[] clock;
 	private Quaternion targetRotation;
+	private int[, ,] moves = new int[4, 9, 4] { {
+			{ 1, 4, 3, 6 },
+			{ 3, 4, 1, -2 },
+			{ 2, 3, 2, 1 },
+			{ 3, 4, 1, 4 },
+			{ 1, 3, 3, -1 },
+			{ 1, 2, 2, 5 },
+			{ 3, 4, 2, 4 },
+			{ 2, 3, 2, -1 },
+			{ 3, 4, 3, -3 }
+		}, {
+			{ 1, 2, 4, 6 },
+			{ 1, 2, 3, 6 },
+			{ 1, 2, 1, 6 },
+			{ 1, 3, 4, 1 },
+			{ 1, 3, 4, -5 },
+			{ 3, 4, 4, -4 },
+			{ 3, 4, 4, 2 },
+			{ 1, 4, 1, -5 },
+			{ 2, 3, 4, 6 }
+		}, {
+			{ 1, 4, 3, -4 },
+			{ 2, 3, 2, 4 },
+			{ 2, 4, 4, -4 },
+			{ 1, 3, 2, 5 },
+			{ 2, 4, 1, 2 },
+			{ 1, 4, 3, 2 },
+			{ 2, 3, 3, 3 },
+			{ 2, 4, 2, -2 },
+			{ 2, 4, 2, 6 }
+		}, {
+			{ 1, 4, 4, 1 },
+			{ 2, 3, 2, 3 },
+			{ 1, 3, 1, -3 },
+			{ 1, 2, 1, -3 },
+			{ 2, 4, 3, 3 },
+			{ 1, 3, 4, -5 },
+			{ 2, 4, 3, 5 },
+			{ 1, 4, 1, -2 },
+			{ 1, 2, 1, -1 }
+		}
+	};
 
 	// Use this for initialization
 	void Start()
@@ -58,29 +100,28 @@ public class RubiksClock : MonoBehaviour
 		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
 		GetComponent<KMSelectable>().AddInteractionPunch();
 
-		//targetRotation *= Quaternion.AngleAxis(180, Vector3.forward);
-		clockPuzzle.transform.localRotation *= Quaternion.AngleAxis(180, Vector3.forward);
+		targetRotation *= Quaternion.AngleAxis(-180, Vector3.forward);
 	}
 
 	private void OnChangePin(int i)
 	{
 		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-		GetComponent<KMSelectable>().AddInteractionPunch();
+		GetComponent<KMSelectable>().AddInteractionPunch(.5f);
 
 		pin[i] = !pin[i];
-		pins[i].transform.Translate(0, (pin[i] ? 0.014f : -0.014f), 0);
+		pins[i].transform.Translate(0, (pin[i] ? .014f : -.014f), 0);
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		clockPuzzle.transform.localRotation = Quaternion.Lerp(clockPuzzle.transform.localRotation, targetRotation, 5 * Time.deltaTime); 
+		clockPuzzle.transform.localRotation = Quaternion.Lerp(clockPuzzle.transform.localRotation, targetRotation, 4 * Time.deltaTime); 
 	}
 
 	private void OnPressButton(int i)
 	{
 		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-		GetComponent<KMSelectable>().AddInteractionPunch();
+		GetComponent<KMSelectable>().AddInteractionPunch(.1f);
 
 		// 0=TL, 1=TR, 2=BL, 3=BR
 		int gear = i / 2;
@@ -206,52 +247,3 @@ public class RubiksClock : MonoBehaviour
 		}
 	}
 }
-/**
- * JSON clock data
-[
-[
-[[1,4],3,6],
-[[3,4],1,-2],
-[[2,3],2,1],
-[[3,4],1,4],
-[[1,3],3,-1],
-[[1,2],2,5],
-[[3,4],2,4],
-[[2,3],2,-1],
-[[3,4],3,-3]
-],
-[
-[[1,2],4,6],
-[[1,2],3,6],
-[[1,2],1,6],
-[[1,3],4,1],
-[[1,3],4,-5],
-[[3,4],4,-4],
-[[3,4],4,2],
-[[1,4],1,-5],
-[[2,3],4,6]
-],
-[
-[[1,4],3,-4],
-[[2,3],2,4],
-[[2,4],4,-4],
-[[1,3],2,5],
-[[2,4],1,2],
-[[1,4],3,2],
-[[2,3],3,3],
-[[2,4],2,-2],
-[[2,4],2,6]],
-[
-[[1,4],4,1],
-[[2,3],2,3],
-[[1,3],1,-3],
-[[1,2],1,-3],
-[[2,4],3,3],
-[[1,3],4,-5],
-[[2,4],3,5],
-[[1,4],1,-2],
-[[1,2],1,-1]
-]
-]
- * 
- */
