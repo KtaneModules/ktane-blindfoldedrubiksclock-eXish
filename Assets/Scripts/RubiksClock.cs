@@ -5,15 +5,15 @@ using UnityEngine;
 
 public class RubiksClock : MonoBehaviour
 {
-	public KMSelectable[] buttons;
-	public GameObject clockPuzzle;
-	public KMSelectable[] pins;
-	public GameObject[] clocks;
-	public KMSelectable otherSide;
-	private Boolean[] pin;
-	private int[] clock;
-	private Quaternion targetRotation;
-	private int[, ,] moves = new int[4, 9, 4] { {
+	public KMSelectable[] Buttons;
+	public GameObject ClockPuzzle;
+	public KMSelectable[] Pins;
+	public GameObject[] Clocks;
+	public KMSelectable OtherSide;
+	private Boolean[] _pins;
+	private int[] _clocks;
+	private Quaternion _targetRotation;
+	private int[, ,] _moves = new int[4, 9, 4] { {
 			{ 1, 4, 3, 6 },
 			{ 3, 4, 1, -2 },
 			{ 2, 3, 2, 1 },
@@ -60,23 +60,23 @@ public class RubiksClock : MonoBehaviour
 	void Start()
 	{
 		// Gear buttons
-		for (int i = 0; i < buttons.Length; i++) {
+		for (int i = 0; i < Buttons.Length; i++) {
 			var j = i;
-			buttons[i].OnInteract += delegate () {
+			Buttons[i].OnInteract += delegate () {
 				OnPressButton(j);
 				return false;
 			};
 		}
 
 		// Pins
-		pin = new Boolean[pins.Length];
-		for (int i = 0; i < pins.Length; i++) {
+		_pins = new Boolean[Pins.Length];
+		for (int i = 0; i < Pins.Length; i++) {
 			var j = i;
-			pins[i].OnInteract += delegate () {
+			Pins[i].OnInteract += delegate () {
 				OnChangePin(j);
 				return false;
 			};
-			pin[i] = true;
+			_pins[i] = true;
 		}
 
 		// Clocks
@@ -84,15 +84,15 @@ public class RubiksClock : MonoBehaviour
 		// 0  1  2    11 10 9
 		// 3  4  5    14 13 12
 		// 6  7  8    17 16 15
-		clock = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		_clocks = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 		// Turn over
-		otherSide.OnInteract += delegate () {
+		OtherSide.OnInteract += delegate () {
 			TurnOverToOtherSide();
 			return false;
 		};
 
-		targetRotation = clockPuzzle.transform.localRotation;
+		_targetRotation = clockPuzzle.transform.localRotation;
 	}
 
 	private void TurnOverToOtherSide()
@@ -100,7 +100,7 @@ public class RubiksClock : MonoBehaviour
 		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
 		GetComponent<KMSelectable>().AddInteractionPunch();
 
-		targetRotation *= Quaternion.AngleAxis(-180, Vector3.forward);
+		_targetRotation *= Quaternion.AngleAxis(-180, Vector3.forward);
 	}
 
 	private void OnChangePin(int i)
@@ -108,14 +108,14 @@ public class RubiksClock : MonoBehaviour
 		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
 		GetComponent<KMSelectable>().AddInteractionPunch(.5f);
 
-		pin[i] = !pin[i];
-		pins[i].transform.Translate(0, (pin[i] ? .014f : -.014f), 0);
+		_pins[i] = !_pins[i];
+		Pins[i].transform.Translate(0, (_pins[i] ? .014f : -.014f), 0);
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		clockPuzzle.transform.localRotation = Quaternion.Lerp(clockPuzzle.transform.localRotation, targetRotation, 4 * Time.deltaTime); 
+		clockPuzzle.transform.localRotation = Quaternion.Lerp(clockPuzzle.transform.localRotation, _targetRotation, 4 * Time.deltaTime); 
 	}
 
 	private void OnPressButton(int i)
@@ -133,92 +133,92 @@ public class RubiksClock : MonoBehaviour
 		case 0:
 			TurnClock(dir, new Boolean[] {
 				true,
-				pin[0],
-				(pin[0] && pin[1]) || (!pin[0] && !pin[1]),
-				pin[0],
-				pin[0],
-				pin[0] && (pin[1] || pin[3]),
-				(pin[0] && pin[2]) || (!pin[0] && !pin[2]),
-				pin[0] && (pin[2] || pin[3]),
-				(pin[0] && pin[3]) || (!pin[0] && !pin[3]),
+				_pins[0],
+				(_pins[0] && _pins[1]) || (!_pins[0] && !_pins[1]),
+				_pins[0],
+				_pins[0],
+				_pins[0] && (_pins[1] || _pins[3]),
+				(_pins[0] && _pins[2]) || (!_pins[0] && !_pins[2]),
+				_pins[0] && (_pins[2] || _pins[3]),
+				(_pins[0] && _pins[3]) || (!_pins[0] && !_pins[3]),
 
 				true,
-				!pin[0],
-				(pin[0] && pin[1]) || (!pin[0] && !pin[1]),
-				!pin[0],
-				!pin[0],
-				!pin[0] && (!pin[1] || !pin[3]),
-				(pin[0] && pin[2]) || (!pin[0] && !pin[2]),
-				!pin[0] && (!pin[2] || !pin[3]),
-				(pin[0] && pin[3]) || (!pin[0] && !pin[3]),
+				!_pins[0],
+				(_pins[0] && _pins[1]) || (!_pins[0] && !_pins[1]),
+				!_pins[0],
+				!_pins[0],
+				!_pins[0] && (!_pins[1] || !_pins[3]),
+				(_pins[0] && _pins[2]) || (!_pins[0] && !_pins[2]),
+				!_pins[0] && (!_pins[2] || !_pins[3]),
+				(_pins[0] && _pins[3]) || (!_pins[0] && !_pins[3]),
 			});
 			break;
 		case 1:
 			TurnClock(dir, new Boolean[] {
-				(pin[1] && pin[0]) || (!pin[1] && !pin[0]),
-				pin[1],
+				(_pins[1] && _pins[0]) || (!_pins[1] && !_pins[0]),
+				_pins[1],
 				true,
-				pin[1] && (pin[0] || pin[2]),
-				pin[1],
-				pin[1],
-				(pin[1] && pin[2]) || (!pin[1] && !pin[2]),
-				pin[1] && (pin[3] || pin[2]),
-				(pin[1] && pin[3]) || (!pin[1] && !pin[3]),
+				_pins[1] && (_pins[0] || _pins[2]),
+				_pins[1],
+				_pins[1],
+				(_pins[1] && _pins[2]) || (!_pins[1] && !_pins[2]),
+				_pins[1] && (_pins[3] || _pins[2]),
+				(_pins[1] && _pins[3]) || (!_pins[1] && !_pins[3]),
 
-				(pin[1] && pin[0]) || (!pin[1] && !pin[0]),
-				!pin[1],
+				(_pins[1] && _pins[0]) || (!_pins[1] && !_pins[0]),
+				!_pins[1],
 				true,
-				!pin[1] && (!pin[0] || !pin[2]),
-				!pin[1],
-				!pin[1],
-				(pin[1] && pin[2]) || (!pin[1] && !pin[2]),
-				!pin[1] && (!pin[3] || !pin[2]),
-				(pin[1] && pin[3]) || (!pin[1] && !pin[3]),
+				!_pins[1] && (!_pins[0] || !_pins[2]),
+				!_pins[1],
+				!_pins[1],
+				(_pins[1] && _pins[2]) || (!_pins[1] && !_pins[2]),
+				!_pins[1] && (!_pins[3] || !_pins[2]),
+				(_pins[1] && _pins[3]) || (!_pins[1] && !_pins[3]),
 			});
 			break;
 		case 2:
 			TurnClock(dir, new Boolean[] {
-				(pin[2] && pin[0]) || (!pin[2] && !pin[0]),
-				pin[2] && (pin[0] || pin[1]),
-				(pin[2] && pin[1]) || (!pin[2] && !pin[1]),
-				pin[2],
-				pin[2],
-				pin[2] && (pin[3] || pin[1]),
+				(_pins[2] && _pins[0]) || (!_pins[2] && !_pins[0]),
+				_pins[2] && (_pins[0] || _pins[1]),
+				(_pins[2] && _pins[1]) || (!_pins[2] && !_pins[1]),
+				_pins[2],
+				_pins[2],
+				_pins[2] && (_pins[3] || _pins[1]),
 				true,
-				pin[2],
-				(pin[2] && pin[3]) || (!pin[2] && !pin[3]),
+				_pins[2],
+				(_pins[2] && _pins[3]) || (!_pins[2] && !_pins[3]),
 
-				(pin[2] && pin[0]) || (!pin[2] && !pin[0]),
-				!pin[2] && (!pin[0] || !pin[1]),
-				(pin[2] && pin[1]) || (!pin[2] && !pin[1]),
-				!pin[2],
-				!pin[2],
-				!pin[2] && (!pin[3] || !pin[1]),
+				(_pins[2] && _pins[0]) || (!_pins[2] && !_pins[0]),
+				!_pins[2] && (!_pins[0] || !_pins[1]),
+				(_pins[2] && _pins[1]) || (!_pins[2] && !_pins[1]),
+				!_pins[2],
+				!_pins[2],
+				!_pins[2] && (!_pins[3] || !_pins[1]),
 				true,
-				!pin[2],
-				(pin[2] && pin[3]) || (!pin[2] && !pin[3]),
+				!_pins[2],
+				(_pins[2] && _pins[3]) || (!_pins[2] && !_pins[3]),
 			});
 			break;
 		case 3:
 			TurnClock(dir, new Boolean[] {
-				(pin[3] && pin[0]) || (!pin[3] && !pin[0]),
-				pin[3] && (pin[1] || pin[0]),
-				(pin[3] && pin[1]) || (!pin[3] && !pin[1]),
-				pin[3] && (pin[2] || pin[0]),
-				pin[3],
-				pin[3],
-				(pin[3] && pin[2]) || (!pin[3] && !pin[2]),
-				pin[3],
+				(_pins[3] && _pins[0]) || (!_pins[3] && !_pins[0]),
+				_pins[3] && (_pins[1] || _pins[0]),
+				(_pins[3] && _pins[1]) || (!_pins[3] && !_pins[1]),
+				_pins[3] && (_pins[2] || _pins[0]),
+				_pins[3],
+				_pins[3],
+				(_pins[3] && _pins[2]) || (!_pins[3] && !_pins[2]),
+				_pins[3],
 				true,
 
-				(pin[3] && pin[0]) || (!pin[3] && !pin[0]),
-				!pin[3] && (!pin[1] || !pin[0]),
-				(pin[3] && pin[1]) || (!pin[3] && !pin[1]),
-				!pin[3] && (!pin[2] || !pin[0]),
-				!pin[3],
-				!pin[3],
-				(pin[3] && pin[2]) || (!pin[3] && !pin[2]),
-				!pin[3],
+				(_pins[3] && _pins[0]) || (!_pins[3] && !_pins[0]),
+				!_pins[3] && (!_pins[1] || !_pins[0]),
+				(_pins[3] && _pins[1]) || (!_pins[3] && !_pins[1]),
+				!_pins[3] && (!_pins[2] || !_pins[0]),
+				!_pins[3],
+				!_pins[3],
+				(_pins[3] && _pins[2]) || (!_pins[3] && !_pins[2]),
+				!_pins[3],
 				true,
 			});
 			break;
@@ -236,12 +236,12 @@ public class RubiksClock : MonoBehaviour
 			}
 
 			if (conditions[i]) {
-				clock[i] = (clock[i] + dir) % 12;
-				clocks[i].transform.Rotate(0, 30 * dir, 0);
+				_clocks[i] = (_clocks[i] + dir) % 12;
+				Clocks[i].transform.Rotate(0, 30 * dir, 0);
 			}
 		}
 
-		int wrongClock = Array.Find(clock, i => i != 0);
+		int wrongClock = Array.Find(_clocks, i => i != 0);
 		if (wrongClock == 0) {
 			GetComponent<KMBombModule>().HandlePass();
 		}
