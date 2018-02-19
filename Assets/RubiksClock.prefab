@@ -5388,7 +5388,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1920dd549db9ab245940767500f89c7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttons:
+  GearButtons:
   - {fileID: 114084786577901396}
   - {fileID: 114351709686416108}
   - {fileID: 114701277746028208}
@@ -5397,13 +5397,13 @@ MonoBehaviour:
   - {fileID: 114766155491431176}
   - {fileID: 114021216679997078}
   - {fileID: 114434794573674878}
-  clockPuzzle: {fileID: 1335401422617068}
-  pins:
+  ClockPuzzle: {fileID: 1335401422617068}
+  Pins:
   - {fileID: 114550154283608136}
   - {fileID: 114262659172926224}
   - {fileID: 114088792409586852}
   - {fileID: 114810571033784866}
-  clocks:
+  Clocks:
   - {fileID: 1485643229900310}
   - {fileID: 1515164444610238}
   - {fileID: 1572032466859128}
@@ -5422,7 +5422,7 @@ MonoBehaviour:
   - {fileID: 1975851408341182}
   - {fileID: 1537042568445090}
   - {fileID: 1389412133985618}
-  otherSide: {fileID: 114967018839332086}
+  TurnOverButton: {fileID: 114967018839332086}
 --- !u!114 &114467199145338254
 MonoBehaviour:
   m_ObjectHideFlags: 1
