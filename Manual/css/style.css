@@ -1,9 +1,30 @@
-table.no-td-borders {
-	margin-left: auto;
-	margin-right: auto;
+table.clocks {
+	border: 2px solid black;
+	margin: 2rem auto;
 }
-table.no-td-borders > tbody > tr > td {
+table.clocks > tbody > tr > td {
 	text-align: center;
 	border: none;
-	padding: .5rem;
+	padding: 0;
+}
+table.table {
+	border: 2px solid black;
+	width: 100%;
+}
+table.table td {
+	border-color: black;
+}
+div.footnotes {
+	font-size: smaller;
+	margin-top: 1em;
+	padding-top: .5em;
+	position: relative;
+}
+div.footnotes::before {
+	content: '';
+	border-top: 1px solid #ccc;
+	width: 10em;
+	position: absolute;
+	left: 0;
+	top: 0;
 }
