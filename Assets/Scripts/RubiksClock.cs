@@ -10,7 +10,6 @@ public class RubiksClock : MonoBehaviour
     public KMSelectable[] Pins;
     public GameObject[] Clocks;
     public KMSelectable TurnOverButton;
-    public GameObject[] PinLights;
     public GameObject[] ClockLights;
     private Boolean[] _pins;
     private int[] _clocks;
@@ -125,11 +124,8 @@ public class RubiksClock : MonoBehaviour
         }
 
         // Light the pin and clock for the first move
-        foreach (GameObject pinLight in PinLights)
-        {
-            pinLight.transform.parent = Pins[_moves[0].LitPin].transform;
-            pinLight.transform.position = new Vector3(0, 1.1f, 0);
-        }
+        Pins[_moves[0].LitPin].transform.Find("LightFront").GetComponent<Light>().enabled = true;
+        Pins[_moves[0].LitPin].transform.Find("LightBack").GetComponent<Light>().enabled = true;
         Pins[_moves[0].LitPin].GetComponent<Renderer>().material.EnableKeyword("_EMISSION");
 
         //son.transform.parent = null;
