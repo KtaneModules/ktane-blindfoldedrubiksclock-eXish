@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using Rnd = UnityEngine.Random;
@@ -60,6 +61,12 @@ public class RubiksClock : MonoBehaviour
     };
     private List<Move> _moves = new List<Move>();
 
+    // Convert pin index to the other side
+    private int[] _mirrorPin = new int[] { 1, 0, 3, 2 };
+
+    // Convert clock index to the other side
+    private int[] _mirrorClock = new int[] { 2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9, 14, 13, 12, 17, 16, 15 };
+
     // Called once at start
     void Start()
     {
@@ -84,7 +91,7 @@ public class RubiksClock : MonoBehaviour
         // 0  1  2    11 10 9
         // 3  4  5    14 13 12
         // 6  7  8    17 16 15
-        _clocks = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        _clocks = Enumerable.Repeat(0, 18).ToArray();
 
         // Turn over
         TurnOverButton.OnInteract += delegate () { PressTurnOver(); return false; };
@@ -98,39 +105,77 @@ public class RubiksClock : MonoBehaviour
             if (Rnd.Range(0, 2) == 1) ChangePin(i);
         }
 
-        // Random moves for scramble
-        for (int i = 0; i < 3; i++)
-        {
-            // Moves are applied in reverse at scramble time, so you can follow the manual to solve it
-            Move move = new Move()
-            {
-                ClocksAtEnd = (int[])_clocks.Clone(),
-                LitPin = Rnd.Range(0, 4),
-                LitClock = Rnd.Range(0, 9),
-            };
-            _moves.Insert(0, move);
-
-            // First rotate backwards
-            RotateGear(_manualMoves[move.LitPin, move.LitClock, 2] - 1, -_manualMoves[move.LitPin, move.LitClock, 3]);
-
-            // Then change the pins
-            ChangePin(_manualMoves[move.LitPin, move.LitClock, 0] - 1);
-            ChangePin(_manualMoves[move.LitPin, move.LitClock, 1] - 1);
-        }
+        // Scramble
+        Scramble(3);
 
         foreach (Move move in _moves)
         {
             Debug.LogFormat("Lit clock: {0}. Lit pin: {1}.", move.LitClock + 1, move.LitPin + 1);
         }
 
-        // Light the pin and clock for the first move
-        Pins[_moves[0].LitPin].transform.Find("LightFront").GetComponent<Light>().enabled = true;
-        Pins[_moves[0].LitPin].transform.Find("LightBack").GetComponent<Light>().enabled = true;
-        Pins[_moves[0].LitPin].GetComponent<Renderer>().material.EnableKeyword("_EMISSION");
+        // If the first move is on the back, turn over
+        if (!_moves[0].OnFrontSide)
+        {
+            TurnOver(true);
+        }
 
-        //son.transform.parent = null;
-        //daddy.transform.parent = son.transform;
+        // This should light the pin and clock for the first move
+        CheckState();
+    }
 
+    private void Scramble(int numMoves)
+    {
+        // Random moves for scramble
+        // Moves are applied reversed and in reverse order at scramble time, so following the manual will solve it
+        bool onFrontSide = true;
+        for (int i = 0; i < numMoves; i++)
+        {
+            // Turn over
+            onFrontSide = !onFrontSide;
+
+            Move move = new Move()
+            {
+                LitPin = Rnd.Range(0, 4),
+                LitClock = Rnd.Range(0, 9),
+                OnFrontSide = onFrontSide,
+            };
+
+            // Rotate backwards
+            int gear = _manualMoves[move.LitPin, move.LitClock, 2] - 1;
+            int amount = -_manualMoves[move.LitPin, move.LitClock, 3];
+            if (!move.OnFrontSide)
+            {
+                gear = _mirrorPin[gear];
+                amount = -amount;
+            }
+            RotateGear(gear, amount);
+            move.ClocksAtStart = (int[])_clocks.Clone();
+
+            // Change pins
+            int pin1 = _manualMoves[move.LitPin, move.LitClock, 0] - 1;
+            int pin2 = _manualMoves[move.LitPin, move.LitClock, 1] - 1;
+            if (!move.OnFrontSide)
+            {
+                pin1 = _mirrorPin[pin1];
+                pin2 = _mirrorPin[pin2];
+            }
+            ChangePin(pin1);
+            ChangePin(pin2);
+
+            // Insert in front
+            _moves.Insert(0, move);
+        }
+    }
+
+    private void LightPinAndClock(Move move)
+    {
+        foreach (Move m in _moves)
+        {
+            Pins[m.OnFrontSide ? m.LitPin : _mirrorPin[m.LitPin]].transform.Find("PinLightFront").GetComponent<Light>().enabled = (m == move);
+            Pins[m.OnFrontSide ? m.LitPin : _mirrorPin[m.LitPin]].transform.Find("PinLightBack").GetComponent<Light>().enabled = (m == move);
+            Clocks[m.OnFrontSide ? m.LitClock : _mirrorClock[m.LitClock]].transform.Find("ClockLight").GetComponent<Light>().enabled = (m == move);
+            Clocks[m.OnFrontSide ? (m.LitClock + 9) : (_mirrorClock[m.LitClock] + 9)].transform.Find("ClockLight").GetComponent<Light>().enabled = (m == move);
+        }
     }
 
     // Called once per frame
@@ -147,9 +192,10 @@ public class RubiksClock : MonoBehaviour
         TurnOver();
     }
 
-    private void TurnOver()
+    private void TurnOver(bool instant = false)
     {
-        _targetRotation *= Quaternion.AngleAxis(-180, Vector3.forward);
+        if (instant) ClockPuzzle.transform.Rotate(0, 0, 180);
+        _targetRotation *= Quaternion.AngleAxis(180, Vector3.forward);
     }
 
     private void PressPin(int i)
@@ -305,11 +351,21 @@ public class RubiksClock : MonoBehaviour
 
     private void CheckState()
     {
-        // Try to find a clock that's not 12 o'clock. If there isn't any, the module is solved.
-        int wrongClock = Array.Find(_clocks, i => i != 0);
-        if (wrongClock == 0)
+        // If all clocks are 12 o'clock
+        if (_clocks.SequenceEqual(Enumerable.Repeat(0, 18).ToArray()))
         {
+            // The module is solved
             GetComponent<KMBombModule>().HandlePass();
+        }
+
+        // If the clocks are in the starting position of a move
+        foreach (Move move in _moves)
+        {
+            if (_clocks.SequenceEqual(move.ClocksAtStart))
+            {
+                LightPinAndClock(move);
+                break;
+            }
         }
     }
 
@@ -318,6 +374,6 @@ public class RubiksClock : MonoBehaviour
         public int LitClock { get; set; }
         public int LitPin { get; set; }
         public int[] ClocksAtStart { get; set; }
-        public int[] ClocksAtEnd { get; set; }
+        public bool OnFrontSide { get; set; }
     }
 }

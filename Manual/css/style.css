@@ -1,6 +1,9 @@
+div.instructions-table, div.modifications-table {
+	text-align: center;
+}
 table.clocks {
+	margin: 0 auto;
 	border: 2px solid black;
-	margin: 2rem auto;
 }
 table.clocks > tbody > tr > td {
 	text-align: center;

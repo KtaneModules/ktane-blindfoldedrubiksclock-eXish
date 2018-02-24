@@ -34,240 +34,242 @@
 
 					<ul>
 						<li>Select an instruction in the table below based on which clock is lit (big square) and which pin is lit (small square).</li>
-						<li>Select a modification and an amount from the second table.<br/>
-							<b>First time:</b> The first and second character of the serial number determine the first modification and amount.<br/>
-							<b>Next times:</b> Select the next modification and amount. Bottom loops back to top.
+						<li>Select two modifications from the second table.<br/>
+							<b>First time:</b> The first four characters of the serial number determine respectively; action of the 1<sup>st</sup> modification, amount of the 1<sup>st</sup> modification, action of the 2<sup>nd</sup> modification and amount of the 2<sup>nd</sup> modification.<br/>
+							<b>After that:</b> Select the next row for both actions and amounts. If you are at the bottom, continue at the top.
 						</li>
-						<li>Apply the modification. The instruction table is cyclic; if you get out of bounds, continue on the opposite side.</li>
-						<li>Execute the modified instruction. The top two arrows of the instruction indicate which pins to change (pull or push, depending on their current state). The bottom arrow and number indicate which gear to rotate for how many hours. Prime' means counterclockwise.</li>
+						<li>Apply both modifications. The instruction table is cyclic; if you get out of bounds, continue on the opposite side.</li>
+						<li>Execute the instruction. The top two arrows of the instruction indicate which pins to change (pull or push, depending on their current state). The bottom arrow and number indicate which gear to rotate for how many hours. Prime' means counterclockwise.</li>
 						<li>Now <b>turn the Clock over to the other side</b>.</li>
 						<li>Repeat until all clocks, front and back, are set to 12 o'clock.</li>
 					</ul>
-					<table class="clocks">
-						<tr>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇖&nbsp;⇘<br/>
-											⇙&nbsp;6
-										</td>
-										<td>
-											⇖&nbsp;⇗<br/>
-											⇘&nbsp;6
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇖&nbsp;⇘<br/>
-											⇙&nbsp;4'
-										</td>
-										<td>
-											⇖&nbsp;⇘<br/>
-											⇘&nbsp;1
-										</td>
-									</tr>
-								</table>
-							</td>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇙&nbsp;⇘<br/>
-											⇖&nbsp;2'
-										</td>
-										<td>
-											⇖&nbsp;⇗<br/>
-											⇙&nbsp;6
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇗&nbsp;⇙<br/>
-											⇗&nbsp;4
-										</td>
-										<td>
-											⇗&nbsp;⇙<br/>
-											⇗&nbsp;3
-										</td>
-									</tr>
-								</table>
-							</td>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇗&nbsp;⇙<br/>
-											⇗&nbsp;1
-										</td>
-										<td>
-											⇖&nbsp;⇗<br/>
-											⇖&nbsp;6
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇗&nbsp;⇘<br/>
-											⇘&nbsp;4'
-										</td>
-										<td>
-											⇖&nbsp;⇙<br/>
-											⇖&nbsp;3'
-										</td>
-									</tr>
-								</table>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇙&nbsp;⇘<br/>
-											⇖&nbsp;4
-										</td>
-										<td>
-											⇖&nbsp;⇙<br/>
-											⇘&nbsp;1
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇖&nbsp;⇙<br/>
-											⇗&nbsp;5
-										</td>
-										<td>
-											⇖&nbsp;⇗<br/>
-											⇖&nbsp;3'
-										</td>
-									</tr>
-								</table>
-							</td>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇖&nbsp;⇙<br/>
-											⇙&nbsp;1'
-										</td>
-										<td>
-											⇖&nbsp;⇙<br/>
-											⇘&nbsp;5'
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇗&nbsp;⇘<br/>
-											⇖&nbsp;2
-										</td>
-										<td>
-											⇗&nbsp;⇘<br/>
-											⇙&nbsp;3
-										</td>
-									</tr>
-								</table>
-							</td>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇖&nbsp;⇗<br/>
-											⇗&nbsp;5
-										</td>
-										<td>
-											⇙&nbsp;⇘<br/>
-											⇘&nbsp;4'
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇖&nbsp;⇘<br/>
-											⇙&nbsp;2
-										</td>
-										<td>
-											⇖&nbsp;⇙<br/>
-											⇘&nbsp;5'
-										</td>
-									</tr>
-								</table>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇙&nbsp;⇘<br/>
-											⇗&nbsp;4
-										</td>
-										<td>
-											⇙&nbsp;⇘<br/>
-											⇘&nbsp;2
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇗&nbsp;⇙<br/>
-											⇙&nbsp;3
-										</td>
-										<td>
-											⇗&nbsp;⇘<br/>
-											⇙&nbsp;5
-										</td>
-									</tr>
-								</table>
-							</td>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇗&nbsp;⇙<br/>
-											⇗&nbsp;1'
-										</td>
-										<td>
-											⇖&nbsp;⇘<br/>
-											⇖&nbsp;5'
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇗&nbsp;⇘<br/>
-											⇗&nbsp;2'
-										</td>
-										<td>
-											⇖&nbsp;⇘<br/>
-											⇖&nbsp;2'
-										</td>
-									</tr>
-								</table>
-							</td>
-							<td>
-								<table class="table">
-									<tr>
-										<td>
-											⇙&nbsp;⇘<br/>
-											⇙&nbsp;3'
-										</td>
-										<td>
-											⇗&nbsp;⇙<br/>
-											⇘&nbsp;6
-										</td>
-									</tr>
-									<tr>
-										<td>
-											⇗&nbsp;⇘<br/>
-											⇗&nbsp;6
-										</td>
-										<td>
-											⇖&nbsp;⇗<br/>
-											⇖&nbsp;1'
-										</td>
-									</tr>
-								</table>
-							</td>
-						</tr>
-					</table>
-
+					<div class="instructions-table">
+						<h3>Instructions</h3>
+						<table class="clocks">
+							<tr>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇖&nbsp;⇘<br/>
+												⇙&nbsp;6
+											</td>
+											<td>
+												⇖&nbsp;⇗<br/>
+												⇘&nbsp;6
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇖&nbsp;⇘<br/>
+												⇙&nbsp;4'
+											</td>
+											<td>
+												⇖&nbsp;⇘<br/>
+												⇘&nbsp;1
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇙&nbsp;⇘<br/>
+												⇖&nbsp;2'
+											</td>
+											<td>
+												⇖&nbsp;⇗<br/>
+												⇙&nbsp;6
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇗&nbsp;⇙<br/>
+												⇗&nbsp;4
+											</td>
+											<td>
+												⇗&nbsp;⇙<br/>
+												⇗&nbsp;3
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇗&nbsp;⇙<br/>
+												⇗&nbsp;1
+											</td>
+											<td>
+												⇖&nbsp;⇗<br/>
+												⇖&nbsp;6
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇗&nbsp;⇘<br/>
+												⇘&nbsp;4'
+											</td>
+											<td>
+												⇖&nbsp;⇙<br/>
+												⇖&nbsp;3'
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇙&nbsp;⇘<br/>
+												⇖&nbsp;4
+											</td>
+											<td>
+												⇖&nbsp;⇙<br/>
+												⇘&nbsp;1
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇖&nbsp;⇙<br/>
+												⇗&nbsp;5
+											</td>
+											<td>
+												⇖&nbsp;⇗<br/>
+												⇖&nbsp;3'
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇖&nbsp;⇙<br/>
+												⇙&nbsp;1'
+											</td>
+											<td>
+												⇖&nbsp;⇙<br/>
+												⇘&nbsp;5'
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇗&nbsp;⇘<br/>
+												⇖&nbsp;2
+											</td>
+											<td>
+												⇗&nbsp;⇘<br/>
+												⇙&nbsp;3
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇖&nbsp;⇗<br/>
+												⇗&nbsp;5
+											</td>
+											<td>
+												⇙&nbsp;⇘<br/>
+												⇘&nbsp;4'
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇖&nbsp;⇘<br/>
+												⇙&nbsp;2
+											</td>
+											<td>
+												⇖&nbsp;⇙<br/>
+												⇘&nbsp;5'
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇙&nbsp;⇘<br/>
+												⇗&nbsp;4
+											</td>
+											<td>
+												⇙&nbsp;⇘<br/>
+												⇘&nbsp;2
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇗&nbsp;⇙<br/>
+												⇙&nbsp;3
+											</td>
+											<td>
+												⇗&nbsp;⇘<br/>
+												⇙&nbsp;5
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇗&nbsp;⇙<br/>
+												⇗&nbsp;1'
+											</td>
+											<td>
+												⇖&nbsp;⇘<br/>
+												⇖&nbsp;5'
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇗&nbsp;⇘<br/>
+												⇗&nbsp;2'
+											</td>
+											<td>
+												⇖&nbsp;⇘<br/>
+												⇖&nbsp;2'
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td>
+									<table class="table">
+										<tr>
+											<td>
+												⇙&nbsp;⇘<br/>
+												⇙&nbsp;3'
+											</td>
+											<td>
+												⇗&nbsp;⇙<br/>
+												⇘&nbsp;6
+											</td>
+										</tr>
+										<tr>
+											<td>
+												⇗&nbsp;⇘<br/>
+												⇗&nbsp;6
+											</td>
+											<td>
+												⇖&nbsp;⇗<br/>
+												⇖&nbsp;1'
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</div>
 					<div class="page-footer relative-footer">Page 1 of 2</div>
 				</div>
 				<div class="page page-bg-02">
@@ -276,73 +278,76 @@
 						<span class="page-header-section-title">Rubik's Clock</span>
 					</div>
 					<div class="page-content">
-						<table>
-							<tr>
-								<th></th>
-								<th>Modification</th>
-								<th>Amount (x)</th>
-							</tr>
-							<tr>
-								<th>A B C</th>
-								<td>Move x big squares to the right</td>
-								<td>Number of AA batteries</td>
-							</tr>
-							<tr>
-								<th>D E F</th>
-								<td>Move x small squares down</td>
-								<td>Number of lit indicators</td>
-							</tr>
-							<tr>
-								<th>G H I</th>
-								<td>Change other pins if x is even</td>
-								<td>Number of batteries</td>
-							</tr>
-							<tr>
-								<th>J K L</th>
-								<td>Move x big squares up</td>
-								<td>Number of unlit indicators</td>
-							</tr>
-							<tr>
-								<th>M N O</th>
-								<td>Move x small squares to the right</td>
-								<td>Number of D batteries</td>
-							</tr>
-							<tr>
-								<th>P Q R</th>
-								<td>Rotate other way if x is odd</td>
-								<td>Number of indicators</td>
-							</tr>
-							<tr>
-								<th>S T U</th>
-								<td>Move x big squares to the left</td>
-								<td>Number of AA batteries</td>
-							</tr>
-							<tr>
-								<th>V W X</th>
-								<td>Move x small squares up</td>
-								<td>Number of lit indicators</td>
-							</tr>
-							<tr>
-								<th>Y Z 0</th>
-								<td>Rotate +x hours</td>
-								<td>Number of batteries</td>
-							</tr>
-							<tr>
-								<th>1 2 3</th>
-								<td>Move x big squares down</td>
-								<td>Number of unlit indicators</td>
-							</tr>
-							<tr>
-								<th>4 5 6</th>
-								<td>Move x small squares to the left</td>
-								<td>Number of D batteries</td>
-							</tr>
-							<tr>
-								<th>7 8 9</th>
-								<td>Rotate -x hours</td>
-								<td>Number of indicators</td>
-							</tr>
-						</table>
+						<div class="modifications-table">
+							<h3>Modifications</h3>
+							<table>
+								<tr>
+									<th></th>
+									<th>Action</th>
+									<th>Amount (x)</th>
+								</tr>
+								<tr>
+									<th>A B C</th>
+									<td>Move x big squares to the right</td>
+									<td>Number of AA batteries</td>
+								</tr>
+								<tr>
+									<th>D E F</th>
+									<td>Move x small squares down</td>
+									<td>Number of lit indicators</td>
+								</tr>
+								<tr>
+									<th>G H I</th>
+									<td>Change other pins if x is even</td>
+									<td>Number of batteries</td>
+								</tr>
+								<tr>
+									<th>J K L</th>
+									<td>Move x big squares up</td>
+									<td>Number of unlit indicators</td>
+								</tr>
+								<tr>
+									<th>M N O</th>
+									<td>Move x small squares to the right</td>
+									<td>Number of D batteries</td>
+								</tr>
+								<tr>
+									<th>P Q R</th>
+									<td>Rotate other way if x is odd</td>
+									<td>Number of indicators</td>
+								</tr>
+								<tr>
+									<th>S T U</th>
+									<td>Move x big squares to the left</td>
+									<td>Number of AA batteries</td>
+								</tr>
+								<tr>
+									<th>V W X</th>
+									<td>Move x small squares up</td>
+									<td>Number of lit indicators</td>
+								</tr>
+								<tr>
+									<th>Y Z 0</th>
+									<td>Add x hours clockwise to rotation</td>
+									<td>Number of batteries</td>
+								</tr>
+								<tr>
+									<th>1 2 3</th>
+									<td>Move x big squares down</td>
+									<td>Number of unlit indicators</td>
+								</tr>
+								<tr>
+									<th>4 5 6</th>
+									<td>Move x small squares to the left</td>
+									<td>Number of D batteries</td>
+								</tr>
+								<tr>
+									<th>7 8 9</th>
+									<td>Add x hours counterclockwise to rotation</td>
+									<td>Number of indicators</td>
+								</tr>
+							</table>
+						</div>
 					</div>
 					<div class="page-footer relative-footer">Page 2 of 2</div>
 				</div>
