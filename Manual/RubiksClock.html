@@ -25,7 +25,7 @@
 						Time is a relative concept. But it can absolutely turn you crazy.
 					</p>
 
-					<p>Solve it like an actual Rubik's Clock.<br/>
+					<p>It's possible to solve it like an actual Rubik's Clock.<br/>
 						<small>
 							<a href="https://www.google.com/search?q=how+to+solve+the+rubiks+clock">https://www.google.com/search?q=how+to+solve+the+rubiks+clock</a>
 						</small>
@@ -38,8 +38,8 @@
 							<b>First time:</b> The first four characters of the serial number determine respectively; action of the 1<sup>st</sup> modification, amount of the 1<sup>st</sup> modification, action of the 2<sup>nd</sup> modification and amount of the 2<sup>nd</sup> modification.<br/>
 							<b>After that:</b> Select the next row for both actions and amounts. If you are at the bottom, continue at the top.
 						</li>
-						<li>Apply both modifications. The instruction table is cyclic; if you get out of bounds, continue on the opposite side.</li>
-						<li>Execute the instruction. The top two arrows of the instruction indicate which pins to change (pull or push, depending on their current state). The bottom arrow and number indicate which gear to rotate for how many hours. Prime' means counterclockwise.</li>
+						<li>Apply both modifications. 'Move' actions go first. The instruction table is cyclic; if you get out of bounds, continue on the opposite side.</li>
+						<li>Follow the modified instructions. The top two arrows indicate which pins to change (pull or push, depending on their current state). The bottom arrow and number indicate which gear to rotate for how many hours. Prime' means counterclockwise.</li>
 						<li>Now <b>turn the Clock over to the other side</b>.</li>
 						<li>Repeat until all clocks, front and back, are set to 12 o'clock.</li>
 					</ul>
@@ -280,7 +280,7 @@
 					<div class="page-content">
 						<div class="modifications-table">
 							<h3>Modifications</h3>
-							<table>
+							<table class="modifications">
 								<tr>
 									<th></th>
 									<th>Action</th>
@@ -328,7 +328,7 @@
 								</tr>
 								<tr>
 									<th>Y Z 0</th>
-									<td>Add x hours clockwise to rotation</td>
+									<td>Add x hours clockwise</td>
 									<td>Number of batteries</td>
 								</tr>
 								<tr>
@@ -343,7 +343,7 @@
 								</tr>
 								<tr>
 									<th>7 8 9</th>
-									<td>Add x hours counterclockwise to rotation</td>
+									<td>Add x hours counterclockwise</td>
 									<td>Number of indicators</td>
 								</tr>
 							</table>
