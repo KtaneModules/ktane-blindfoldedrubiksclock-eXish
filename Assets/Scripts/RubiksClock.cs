@@ -59,6 +59,7 @@ public class RubiksClock : MonoBehaviour
             { 1, 2, 1, -1 }
         }
     };
+    private List<ModAction> _manualModActions = new List<ModAction>();
     private List<Move> _moves = new List<Move>();
 
     // Convert pin index to the other side
@@ -86,15 +87,106 @@ public class RubiksClock : MonoBehaviour
             _pins[i] = true;
         }
 
+        // Turn over
+        TurnOverButton.OnInteract += delegate () { PressTurnOver(); return false; };
+
+        //public enum MainTypeEnum { MoveBig, MoveSmall, OtherPins, InvertRotation, AddHoursCw, AddHoursCcw }
+        //public enum DirectionEnum { Up, Down, Left, Right }
+
+        //public string Description { get; set; }
+        //public MainTypeEnum MainType { get; set; }
+        //public DirectionEnum Direction { get; set; }
+
+        // Init modifications
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Move x big squares to the right",
+            SerialCharacters = "ABC",
+            MainType = ModAction.MainTypeEnum.MoveBig,
+            Direction = ModAction.DirectionEnum.Right,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Move x small squares down",
+            SerialCharacters = "DEF",
+            MainType = ModAction.MainTypeEnum.MoveSmall,
+            Direction = ModAction.DirectionEnum.Down,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Change other pins if x is even",
+            SerialCharacters = "GHI",
+            MainType = ModAction.MainTypeEnum.OtherPins,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Move x big squares up",
+            SerialCharacters = "JKL",
+            MainType = ModAction.MainTypeEnum.MoveBig,
+            Direction = ModAction.DirectionEnum.Up,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Move x small squares to the right",
+            SerialCharacters = "MNO",
+            MainType = ModAction.MainTypeEnum.MoveSmall,
+            Direction = ModAction.DirectionEnum.Right,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Rotate other way if x is odd",
+            SerialCharacters = "PQR",
+            MainType = ModAction.MainTypeEnum.InvertRotation,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Move x big squares to the left",
+            SerialCharacters = "STU",
+            MainType = ModAction.MainTypeEnum.MoveBig,
+            Direction = ModAction.DirectionEnum.Left,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Move x small squares up",
+            SerialCharacters = "VWX",
+            MainType = ModAction.MainTypeEnum.MoveSmall,
+            Direction = ModAction.DirectionEnum.Up,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Add x hours clockwise",
+            SerialCharacters = "YZ0",
+            MainType = ModAction.MainTypeEnum.AddHours,
+            Direction = ModAction.DirectionEnum.Clockwise,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Move x big squares down",
+            SerialCharacters = "123",
+            MainType = ModAction.MainTypeEnum.MoveBig,
+            Direction = ModAction.DirectionEnum.Down,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Move x small squares to the left",
+            SerialCharacters = "456",
+            MainType = ModAction.MainTypeEnum.MoveSmall,
+            Direction = ModAction.DirectionEnum.Left,
+        });
+        _manualModActions.Add(new ModAction()
+        {
+            Description = "Add x hours counterclockwise",
+            SerialCharacters = "789",
+            MainType = ModAction.MainTypeEnum.AddHours,
+            Direction = ModAction.DirectionEnum.Counterclockwise,
+        });
+
         // Clocks
         // Front:     Back:
         // 0  1  2    11 10 9
         // 3  4  5    14 13 12
         // 6  7  8    17 16 15
         _clocks = Enumerable.Repeat(0, 18).ToArray();
-
-        // Turn over
-        TurnOverButton.OnInteract += delegate () { PressTurnOver(); return false; };
 
         // Init target rotation
         _targetRotation = ClockPuzzle.transform.localRotation;
@@ -375,5 +467,26 @@ public class RubiksClock : MonoBehaviour
         public int LitPin { get; set; }
         public int[] ClocksAtStart { get; set; }
         public bool OnFrontSide { get; set; }
+    }
+
+    class ModAction
+    {
+        public enum MainTypeEnum { MoveBig, MoveSmall, OtherPins, InvertRotation, AddHours }
+        public enum DirectionEnum { Up, Down, Left, Right, Clockwise, Counterclockwise }
+
+        public string Description { get; set; }
+        public string SerialCharacters { get; set; }
+        public MainTypeEnum MainType { get; set; }
+        public DirectionEnum Direction { get; set; }
+    }
+
+    class ModAmount
+    {
+        public enum QuantifierEnum { Batteries, AaBatteries, DBatteries, Indicators, LitIndicators, UnlitIndicators }
+
+        public string Description { get; set; }
+        public string SerialCharacters { get; set; }
+        public QuantifierEnum Quantifier { get; set; }
+        public int Quantity { get; set; }
     }
 }
