@@ -280,7 +280,7 @@ public class RubiksClock : MonoBehaviour
 
 
         // Scramble
-        //Scramble(4);
+        Scramble(4);
 
         foreach (Move move in _moves)
         {
@@ -290,18 +290,21 @@ public class RubiksClock : MonoBehaviour
         // If the first move is on the back, turn over
         if (!_moves[0].OnFrontSide)
         {
-            //TurnOver(true);
+            TurnOver(true);
         }
 
         // This should light the pin and clock for the first move
         CheckState();
     }
 
+    /// <summary>
+    /// Random moves for scramble;
+    /// We don't have to apply the moves reversed or in reversed order, we can just examine the final position after scramble,
+    /// the difference from 12 is what needs to be applied to the starting position.
+    /// </summary>
+    /// <param name="numMoves"></param>
     private void Scramble(int numMoves)
     {
-        // Random moves for scramble;
-        // We don't have to apply the moves reversed or in reversed order, we can just examine the final position after scramble.
-        // The difference from 12 is what needs to be applied to the starting position.
         bool onFrontSide = true;
         for (int i = 0; i < numMoves; i++)
         {
