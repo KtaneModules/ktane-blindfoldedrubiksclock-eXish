@@ -73,7 +73,6 @@ public class RubiksClock : MonoBehaviour
     // Called once at start
     void Start()
     {
-        Debug.Log(Bomb.GetIndicators().Count());
         // Gear buttons
         for (int i = 0; i < GearButtons.Length; i++)
         {
@@ -298,14 +297,18 @@ public class RubiksClock : MonoBehaviour
     }
 
     /// <summary>
-    /// Random moves for scramble;
-    /// We don't have to apply the moves reversed or in reversed order, we can just examine the final position after scramble,
-    /// the difference from 12 is what needs to be applied to the starting position.
+    /// Random moves for scramble. Reverse moves and apply in reverse order, following the manual will solve it.
     /// </summary>
-    /// <param name="numMoves"></param>
     private void Scramble(int numMoves)
     {
         bool onFrontSide = true;
+
+        string serial = Bomb.GetSerialNumber();
+        int firstModAction1 = (Char.IsDigit(serial[0]) ? (int)serial[0] - 22 : (int)serial[0] - 65) / 3;
+        int firstModAmount1 = (Char.IsDigit(serial[1]) ? (int)serial[1] - 22 : (int)serial[1] - 65) / 3;
+        int firstModAction2 = (Char.IsDigit(serial[2]) ? (int)serial[2] - 22 : (int)serial[2] - 65) / 3;
+        int firstModAmount2 = (Char.IsDigit(serial[3]) ? (int)serial[3] - 22 : (int)serial[3] - 65) / 3;
+
         for (int i = 0; i < numMoves; i++)
         {
             Move move = new Move()
@@ -314,6 +317,9 @@ public class RubiksClock : MonoBehaviour
                 LitClock = Rnd.Range(0, 9),
                 OnFrontSide = onFrontSide,
             };
+
+            // Apply move modifications
+            // ...
 
             // Rotate backwards
             int gear = _manualMoves[move.LitPin, move.LitClock, 2] - 1;
@@ -569,6 +575,10 @@ public class RubiksClock : MonoBehaviour
         public int LitPin { get; set; }
         public int[] ClocksAtStart { get; set; }
         public bool OnFrontSide { get; set; }
+        public int ModAction1 { get; set; }
+        public int ModAmount1 { get; set; }
+        public int ModAction2 { get; set; }
+        public int ModAmount2 { get; set; }
     }
 
     struct ModAction
