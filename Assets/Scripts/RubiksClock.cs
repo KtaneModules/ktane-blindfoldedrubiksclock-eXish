@@ -3,15 +3,16 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using Rnd = UnityEngine.Random;
+using KmHelper;
 
 public class RubiksClock : MonoBehaviour
 {
+    public KMBombInfo Bomb;
     public KMSelectable[] GearButtons;
     public GameObject ClockPuzzle;
     public KMSelectable[] Pins;
     public GameObject[] Clocks;
     public KMSelectable TurnOverButton;
-    public GameObject[] ClockLights;
     private Boolean[] _pins;
     private int[] _clocks;
     private Quaternion _targetRotation;
@@ -60,6 +61,7 @@ public class RubiksClock : MonoBehaviour
         }
     };
     private List<ModAction> _manualModActions = new List<ModAction>();
+    private List<ModAmount> _manualModAmounts = new List<ModAmount>();
     private List<Move> _moves = new List<Move>();
 
     // Convert pin index to the other side
@@ -71,6 +73,7 @@ public class RubiksClock : MonoBehaviour
     // Called once at start
     void Start()
     {
+        Debug.Log(Bomb.GetIndicators().Count());
         // Gear buttons
         for (int i = 0; i < GearButtons.Length; i++)
         {
@@ -90,14 +93,7 @@ public class RubiksClock : MonoBehaviour
         // Turn over
         TurnOverButton.OnInteract += delegate () { PressTurnOver(); return false; };
 
-        //public enum MainTypeEnum { MoveBig, MoveSmall, OtherPins, InvertRotation, AddHoursCw, AddHoursCcw }
-        //public enum DirectionEnum { Up, Down, Left, Right }
-
-        //public string Description { get; set; }
-        //public MainTypeEnum MainType { get; set; }
-        //public DirectionEnum Direction { get; set; }
-
-        // Init modifications
+        // Init modification actions
         _manualModActions.Add(new ModAction()
         {
             Description = "Move x big squares to the right",
@@ -181,6 +177,81 @@ public class RubiksClock : MonoBehaviour
             Direction = ModAction.DirectionEnum.Counterclockwise,
         });
 
+        // Init modification amounts
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of AA batteries",
+            SerialCharacters = "ABC",
+            Quantifier = ModAmount.QuantifierEnum.AaBatteries,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of lit indicators",
+            SerialCharacters = "DEF",
+            Quantifier = ModAmount.QuantifierEnum.LitIndicators,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of batteries",
+            SerialCharacters = "GHI",
+            Quantifier = ModAmount.QuantifierEnum.Batteries,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of unlit indicators",
+            SerialCharacters = "JKL",
+            Quantifier = ModAmount.QuantifierEnum.UnlitIndicators,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of D batteries",
+            SerialCharacters = "MNO",
+            Quantifier = ModAmount.QuantifierEnum.DBatteries,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of indicators",
+            SerialCharacters = "PQR",
+            Quantifier = ModAmount.QuantifierEnum.Indicators,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of AA batteries",
+            SerialCharacters = "STU",
+            Quantifier = ModAmount.QuantifierEnum.AaBatteries,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of lit indicators",
+            SerialCharacters = "VWX",
+            Quantifier = ModAmount.QuantifierEnum.LitIndicators,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of batteries",
+            SerialCharacters = "YZ0",
+            Quantifier = ModAmount.QuantifierEnum.Batteries,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of unlit indicators",
+            SerialCharacters = "123",
+            Quantifier = ModAmount.QuantifierEnum.UnlitIndicators,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of D batteries",
+            SerialCharacters = "456",
+            Quantifier = ModAmount.QuantifierEnum.DBatteries,
+        });
+        _manualModAmounts.Add(new ModAmount()
+        {
+            Description = "Number of indicators",
+            SerialCharacters = "789",
+            Quantifier = ModAmount.QuantifierEnum.Indicators,
+            Quantity = Bomb.GetIndicators().Count(),
+        });
+
         // Clocks
         // Front:     Back:
         // 0  1  2    11 10 9
@@ -197,8 +268,19 @@ public class RubiksClock : MonoBehaviour
             if (Rnd.Range(0, 2) == 1) ChangePin(i);
         }
 
+        for (int i = 0; i < _clocks.Length; i++)
+        {
+            _clocks[i] = i % 12;
+        }
+        _pins[0] = true;
+        _pins[1] = false;
+        _pins[2] = true;
+        _pins[3] = false;
+        UpdateGameObjects();
+
+
         // Scramble
-        Scramble(3);
+        //Scramble(4);
 
         foreach (Move move in _moves)
         {
@@ -208,7 +290,7 @@ public class RubiksClock : MonoBehaviour
         // If the first move is on the back, turn over
         if (!_moves[0].OnFrontSide)
         {
-            TurnOver(true);
+            //TurnOver(true);
         }
 
         // This should light the pin and clock for the first move
@@ -217,14 +299,12 @@ public class RubiksClock : MonoBehaviour
 
     private void Scramble(int numMoves)
     {
-        // Random moves for scramble
-        // Moves are applied reversed and in reverse order at scramble time, so following the manual will solve it
+        // Random moves for scramble;
+        // We don't have to apply the moves reversed or in reversed order, we can just examine the final position after scramble.
+        // The difference from 12 is what needs to be applied to the starting position.
         bool onFrontSide = true;
         for (int i = 0; i < numMoves; i++)
         {
-            // Turn over
-            onFrontSide = !onFrontSide;
-
             Move move = new Move()
             {
                 LitPin = Rnd.Range(0, 4),
@@ -254,8 +334,11 @@ public class RubiksClock : MonoBehaviour
             ChangePin(pin1);
             ChangePin(pin2);
 
-            // Insert in front
-            _moves.Insert(0, move);
+            // Turn over
+            onFrontSide = !onFrontSide;
+
+            // Add to scramble
+            _moves.Add(move);
         }
     }
 
@@ -263,10 +346,11 @@ public class RubiksClock : MonoBehaviour
     {
         foreach (Move m in _moves)
         {
-            Pins[m.OnFrontSide ? m.LitPin : _mirrorPin[m.LitPin]].transform.Find("PinLightFront").GetComponent<Light>().enabled = (m == move);
-            Pins[m.OnFrontSide ? m.LitPin : _mirrorPin[m.LitPin]].transform.Find("PinLightBack").GetComponent<Light>().enabled = (m == move);
-            Clocks[m.OnFrontSide ? m.LitClock : _mirrorClock[m.LitClock]].transform.Find("ClockLight").GetComponent<Light>().enabled = (m == move);
-            Clocks[m.OnFrontSide ? (m.LitClock + 9) : (_mirrorClock[m.LitClock] + 9)].transform.Find("ClockLight").GetComponent<Light>().enabled = (m == move);
+            bool enabled = m.Equals(move);
+            Pins[m.OnFrontSide ? m.LitPin : _mirrorPin[m.LitPin]].transform.Find("PinLightFront").GetComponent<Light>().enabled = enabled;
+            Pins[m.OnFrontSide ? m.LitPin : _mirrorPin[m.LitPin]].transform.Find("PinLightBack").GetComponent<Light>().enabled = enabled;
+            Clocks[m.OnFrontSide ? m.LitClock : _mirrorClock[m.LitClock]].transform.Find("ClockLight").GetComponent<Light>().enabled = enabled;
+            Clocks[m.OnFrontSide ? (m.LitClock + 9) : (_mirrorClock[m.LitClock] + 9)].transform.Find("ClockLight").GetComponent<Light>().enabled = enabled;
         }
     }
 
@@ -461,7 +545,22 @@ public class RubiksClock : MonoBehaviour
         }
     }
 
-    class Move
+    private void UpdateGameObjects()
+    {
+        // Update clocks
+        for (int i = 0; i < _clocks.Length; i++)
+        {
+            Clocks[i].transform.eulerAngles = new Vector3(0, 30 * _clocks[i], 0);
+        }
+
+        // Update pins
+        for (int i = 0; i < _pins.Length; i++)
+        {
+            Pins[i].transform.localPosition = new Vector3(Pins[i].transform.localPosition.x, _pins[i] ? .7f : -.7f, Pins[i].transform.localPosition.z);
+        }
+    }
+
+    struct Move
     {
         public int LitClock { get; set; }
         public int LitPin { get; set; }
@@ -469,7 +568,7 @@ public class RubiksClock : MonoBehaviour
         public bool OnFrontSide { get; set; }
     }
 
-    class ModAction
+    struct ModAction
     {
         public enum MainTypeEnum { MoveBig, MoveSmall, OtherPins, InvertRotation, AddHours }
         public enum DirectionEnum { Up, Down, Left, Right, Clockwise, Counterclockwise }
@@ -480,7 +579,7 @@ public class RubiksClock : MonoBehaviour
         public DirectionEnum Direction { get; set; }
     }
 
-    class ModAmount
+    struct ModAmount
     {
         public enum QuantifierEnum { Batteries, AaBatteries, DBatteries, Indicators, LitIndicators, UnlitIndicators }
 
