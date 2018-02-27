@@ -9,6 +9,7 @@
 	<link rel="stylesheet" type="text/css" href="css/main.css">
 	<link rel="stylesheet" type='text/css' href="css/font.css">
 	<link rel="stylesheet" type='text/css' href="css/style.css">
+	<script src='js/highlighter.js'></script><script src='js/translator.js'></script>
 </head>
 <body>
 	<div id="ManualContent">
@@ -38,7 +39,7 @@
 							<b>First time:</b> The first four characters of the serial number determine respectively; action of the 1<sup>st</sup> modification, amount of the 1<sup>st</sup> modification, action of the 2<sup>nd</sup> modification and amount of the 2<sup>nd</sup> modification.<br/>
 							<b>After that:</b> Select the next row for both actions and amounts. If you are at the bottom, continue at the top.
 						</li>
-						<li>Apply both modifications. 'Move' actions go first. The instruction table is cyclic; if you get out of bounds, continue on the opposite side.</li>
+						<li>Apply both modifications. 'Move' actions go first, then 'Rotate', then others. The instruction table is cyclic; if you get out of bounds, continue on the opposite side.</li>
 						<li>Follow the modified instructions. The top two arrows indicate which pins to change (pull or push, depending on their current state). The bottom arrow and number indicate which gear to rotate for how many hours. Prime' means counterclockwise.</li>
 						<li>Now <b>turn the Clock over to the other side</b>.</li>
 						<li>Repeat until all clocks, front and back, are set to 12 o'clock.</li>
@@ -289,62 +290,62 @@
 								<tr>
 									<th>A B C</th>
 									<td>Move x big squares to the right</td>
-									<td>Number of AA batteries</td>
+									<td>Number of AA batteries + 1</td>
 								</tr>
 								<tr>
 									<th>D E F</th>
 									<td>Move x small squares down</td>
-									<td>Number of lit indicators</td>
+									<td>Number of lit indicators + 1</td>
 								</tr>
 								<tr>
 									<th>G H I</th>
 									<td>Change other pins if x is even</td>
-									<td>Number of batteries</td>
+									<td>Number of batteries + 1</td>
 								</tr>
 								<tr>
 									<th>J K L</th>
 									<td>Move x big squares up</td>
-									<td>Number of unlit indicators</td>
+									<td>Number of unlit indicators + 1</td>
 								</tr>
 								<tr>
 									<th>M N O</th>
 									<td>Move x small squares to the right</td>
-									<td>Number of D batteries</td>
+									<td>Number of D batteries + 1</td>
 								</tr>
 								<tr>
 									<th>P Q R</th>
 									<td>Rotate other way if x is odd</td>
-									<td>Number of indicators</td>
+									<td>Number of indicators + 1</td>
 								</tr>
 								<tr>
 									<th>S T U</th>
 									<td>Move x big squares to the left</td>
-									<td>Number of AA batteries</td>
+									<td>Number of AA batteries + 1</td>
 								</tr>
 								<tr>
 									<th>V W X</th>
 									<td>Move x small squares up</td>
-									<td>Number of lit indicators</td>
+									<td>Number of lit indicators + 1</td>
 								</tr>
 								<tr>
 									<th>Y Z 0</th>
 									<td>Add x hours clockwise</td>
-									<td>Number of batteries</td>
+									<td>Number of batteries + 1</td>
 								</tr>
 								<tr>
 									<th>1 2 3</th>
 									<td>Move x big squares down</td>
-									<td>Number of unlit indicators</td>
+									<td>Number of unlit indicators + 1</td>
 								</tr>
 								<tr>
 									<th>4 5 6</th>
 									<td>Move x small squares to the left</td>
-									<td>Number of D batteries</td>
+									<td>Number of D batteries + 1</td>
 								</tr>
 								<tr>
 									<th>7 8 9</th>
 									<td>Add x hours counterclockwise</td>
-									<td>Number of indicators</td>
+									<td>Number of indicators + 1</td>
 								</tr>
 							</table>
 						</div>
