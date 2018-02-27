@@ -73,6 +73,15 @@ public class RubiksClock : MonoBehaviour
     // Called once at start
     void Start()
     {
+        Debug.LogFormat(
+            "Serial={0} AA={1} D={2} Lit={3} Unlit={4} Ports={5}",
+            Bomb.GetSerialNumber(),
+            Bomb.GetBatteryCount(Battery.AA),
+            Bomb.GetBatteryCount(Battery.D),
+            Bomb.GetOnIndicators().Count(),
+            Bomb.GetOffIndicators().Count(),
+            Bomb.GetPortCount()
+        );
         // Gear buttons
         for (int i = 0; i < GearButtons.Length; i++)
         {
@@ -261,17 +270,28 @@ public class RubiksClock : MonoBehaviour
         _targetRotation = ClockPuzzle.transform.localRotation;
 
         // Random end position for pins
-        for (int i = 0; i < 4; i++)
-        {
-            if (Rnd.Range(0, 2) == 1) ChangePin(i);
-        }
+        // @todo: Disabled for now, translate doesn't "work" in this stage??
+        //for (int i = 0; i < 4; i++)
+        //{
+        //    if (Rnd.Range(0, 2) == 1) ChangePin(i);
+        //}
 
         // Scramble
-        Scramble(5);
+        Scramble(4);
 
         foreach (Move move in _moves)
         {
-            Debug.LogFormat("Lit clock: {0}. Lit pin: {1}.", move.LitClock + 1, move.LitPin + 1);
+            Debug.LogFormat(
+                "Lit clock: {0}, lit pin: {1}, {2} for {3} ({4}), {5} for {6} ({7}).",
+                move.LitClock,
+                move.LitPin,
+                move.Modifications[0].Action.Description,
+                move.Modifications[0].Amount.Quantity,
+                move.Modifications[0].Amount.Description,
+                move.Modifications[1].Action.Description,
+                move.Modifications[1].Amount.Quantity,
+                move.Modifications[1].Amount.Description
+            );
         }
 
         // If the first move is on the back, turn over
@@ -328,18 +348,6 @@ public class RubiksClock : MonoBehaviour
                 },
             };
 
-            Debug.LogFormat(
-                "Lit clock: {0}. Lit pin: {1}. Modifications: {2} for {3} ({4}), {5} for {6} ({7}).",
-                move.LitClock,
-                move.LitPin,
-                move.Modifications[0].Action.Description,
-                move.Modifications[0].Amount.Quantity,
-                move.Modifications[0].Amount.Description,
-                move.Modifications[1].Action.Description,
-                move.Modifications[1].Amount.Quantity,
-                move.Modifications[1].Amount.Description
-            );
-
             // Apply "move" modifications
             move.BigSquare = move.LitClock;
             move.SmallSquare = move.LitPin;
@@ -354,8 +362,6 @@ public class RubiksClock : MonoBehaviour
                     int col = (move.BigSquare % 3) * 2 + (move.SmallSquare % 2);
                     int row = (move.BigSquare / 3) * 2 + (move.SmallSquare / 2);
                     int step = (modification.Action.MainType == ModificationAction.MainTypeEnum.MoveBig ? 2 : 1);
-
-                    Debug.LogFormat("Converted to col {0}, row {1}, step {2}", col, row, step);
 
                     // Apply move
                     switch (modification.Action.Direction)
@@ -374,13 +380,9 @@ public class RubiksClock : MonoBehaviour
                             break;
                     }
 
-                    Debug.LogFormat("After move, col {0}, row {1}", col, row);
-
                     // And convert back
                     move.BigSquare = (row / 2 * 3) + (col / 2);
                     move.SmallSquare = (row % 2 * 2) + (col % 2);
-
-                    Debug.LogFormat("Big Square: {0}. Small Square: {1}", move.BigSquare, move.SmallSquare);
                 }
             }
 
@@ -659,11 +661,8 @@ public class RubiksClock : MonoBehaviour
         // If the clocks are in the starting position of a move
         foreach (Move move in _moves)
         {
-            Debug.Log("Move clocks at start:" + string.Join(",", move.ClocksAtStart.Select(x => x.ToString()).ToArray()));
-            Debug.Log("Current clocks:" + string.Join(",", _clocks.Select(x => x.ToString()).ToArray()));
             if (_clocks.SequenceEqual(move.ClocksAtStart))
             {
-                Debug.Log("Hit!");
                 LightPinAndClock(move);
                 break;
             }
