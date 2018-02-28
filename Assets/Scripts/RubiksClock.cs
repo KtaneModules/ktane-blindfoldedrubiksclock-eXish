@@ -5,6 +5,9 @@ using UnityEngine;
 using Rnd = UnityEngine.Random;
 using KmHelper;
 
+/// TO DO:
+///  KT3DText shader for non-see-thru text
+///  Set module ID
 public class RubiksClock : MonoBehaviour
 {
     public KMBombInfo Bomb;
