@@ -270,11 +270,10 @@ public class RubiksClock : MonoBehaviour
         _targetRotation = ClockPuzzle.transform.localRotation;
 
         // Random end position for pins
-        // @todo: Disabled for now, translate doesn't "work" in this stage??
-        //for (int i = 0; i < 4; i++)
-        //{
-        //    if (Rnd.Range(0, 2) == 1) ChangePin(i);
-        //}
+        for (int i = 0; i < 4; i++)
+        {
+            if (Rnd.Range(0, 2) == 1) ChangePin(i);
+        }
 
         // Scramble
         Scramble(4);
@@ -511,7 +510,8 @@ public class RubiksClock : MonoBehaviour
     private void ChangePin(int i)
     {
         _pins[i] = !_pins[i];
-        Pins[i].transform.Translate(0, (_pins[i] ? .014f : -.014f), 0);
+        //Pins[i].transform.Translate(0, (_pins[i] ? .7f : -.7f), 0);
+        Pins[i].transform.localPosition = new Vector3(Pins[i].transform.localPosition.x, (_pins[i] ? .7f : -.7f), Pins[i].transform.localPosition.z);
     }
 
     private void PressGear(int i)
