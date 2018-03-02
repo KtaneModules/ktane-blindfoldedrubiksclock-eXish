@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Rnd = UnityEngine.Random;
 using KmHelper;
+using System.Collections;
 
 /// TO DO:
 ///  KT3DText shader for non-see-thru text
@@ -66,6 +67,7 @@ public class RubiksClock : MonoBehaviour
     private List<ModificationAction> _manualModActions = new List<ModificationAction>();
     private List<ModificationAmount> _manualModAmounts = new List<ModificationAmount>();
     private List<Move> _moves = new List<Move>();
+    private Queue<IAnimation> _animationQueue = new Queue<IAnimation>();
 
     // Convert pin index to the other side
     private int[] _mirrorPin = new int[] { 1, 0, 3, 2 };
@@ -304,6 +306,8 @@ public class RubiksClock : MonoBehaviour
 
         // This should light the pin and clock for the first move
         CheckState();
+
+        StartCoroutine(AnimateMovements());
     }
 
     /// <summary>
@@ -513,8 +517,7 @@ public class RubiksClock : MonoBehaviour
     private void ChangePin(int i)
     {
         _pins[i] = !_pins[i];
-        //Pins[i].transform.Translate(0, (_pins[i] ? .7f : -.7f), 0);
-        Pins[i].transform.localPosition = new Vector3(Pins[i].transform.localPosition.x, (_pins[i] ? .7f : -.7f), Pins[i].transform.localPosition.z);
+        _animationQueue.Enqueue(new PinAnimation() { Pin = i, Position = _pins[i] });
     }
 
     private void PressGear(int i)
@@ -647,9 +650,10 @@ public class RubiksClock : MonoBehaviour
             {
                 // Adding a large product of 12 for extreme conditions, making sure clocks stay positive ints
                 _clocks[i] = (_clocks[i] + amount + 144) % 12;
-                Clocks[i].transform.Rotate(0, 30 * amount, 0);
+                //Clocks[i].transform.Rotate(0, 30 * amount, 0);
             }
         }
+        _animationQueue.Enqueue(new ClockAnimation() { Clocks = (int[])_clocks.Clone() });
     }
 
     private void CheckState()
@@ -672,28 +676,68 @@ public class RubiksClock : MonoBehaviour
         }
     }
 
-    private void UpdateGameObjects()
+    private IEnumerator AnimateMovements()
     {
-        // Update clocks
-        for (int i = 0; i < _clocks.Length; i++)
+        while (true)
         {
-            Clocks[i].transform.eulerAngles = new Vector3(0, 30 * _clocks[i], 0);
-        }
+            while (_animationQueue.Count == 0)
+            {
+                yield return null;
+            }
 
-        // Update pins
-        for (int i = 0; i < _pins.Length; i++)
-        {
-            Pins[i].transform.localPosition = new Vector3(Pins[i].transform.localPosition.x, _pins[i] ? .7f : -.7f, Pins[i].transform.localPosition.z);
+            IAnimation animation = _animationQueue.Dequeue();
+
+            // Rotate clocks
+            if (animation is ClockAnimation)
+            {
+                ClockAnimation clockAnimation = (ClockAnimation)animation;
+                int[] clocks = clockAnimation.Clocks;
+                Quaternion[] targetRotations = new Quaternion[clocks.Length];
+                for (int i = 0; i < clocks.Length; i++)
+                {
+                    targetRotations[i] = Quaternion.Euler(Clocks[i].transform.localRotation.x, 30 * clocks[i], Clocks[i].transform.localRotation.z);
+                }
+
+                float duration = 2f;
+                float elapsed = 0f;
+
+                while (elapsed < duration)
+                {
+                    yield return null;
+                    elapsed += Time.deltaTime;
+                    for (int i = 0; i < clocks.Length; i++)
+                    {
+                        Clocks[i].transform.localRotation = Quaternion.Lerp(Clocks[i].transform.localRotation, targetRotations[i], elapsed / duration);
+                    }
+                }
+            }
+            else if (animation is PinAnimation)
+            {
+                PinAnimation pinAnimation = (PinAnimation)animation;
+                int pin = pinAnimation.Pin;
+                bool position = pinAnimation.Position;
+                Vector3 targetPosition = new Vector3(Pins[pin].transform.localPosition.x, (position ? .7f : -.7f), Pins[pin].transform.localPosition.z);
+
+                float duration = 2f;
+                float elapsed = 0f;
+
+                while (elapsed < duration)
+                {
+                    yield return null;
+                    elapsed += Time.deltaTime;
+                    Pins[pin].transform.localPosition = Vector3.Lerp(Pins[pin].transform.localPosition, targetPosition, elapsed / duration);
+                }
+            }
         }
     }
 
     struct Move
     {
-        // Lit clock and pin for initial instructions
+        // Lit clock and pin for initial instruction cell
         public int LitClock { get; set; }
         public int LitPin { get; set; }
 
-        // Instructions after possible move by modification
+        // Instruction cell after possible move by modification
         public int BigSquare { get; set; }
         public int SmallSquare { get; set; }
 
@@ -729,5 +773,18 @@ public class RubiksClock : MonoBehaviour
         public string Description { get; set; }
         public string SerialCharacters { get; set; }
         public int Quantity { get; set; }
+    }
+
+    interface IAnimation { }
+
+    struct ClockAnimation : IAnimation
+    {
+        public int[] Clocks { get; set; }
+    }
+
+    struct PinAnimation : IAnimation
+    {
+        public int Pin { get; set; }
+        public bool Position { get; set; }
     }
 }
