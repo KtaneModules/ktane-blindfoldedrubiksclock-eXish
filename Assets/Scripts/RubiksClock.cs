@@ -17,6 +17,7 @@ public class RubiksClock : MonoBehaviour
     public KMSelectable[] Pins;
     public GameObject[] Clocks;
     public KMSelectable TurnOverButton;
+    public KMSelectable ResetButton;
     private Boolean[] _pins;
     private int[] _clocks;
     private Quaternion _targetRotation;
@@ -105,6 +106,9 @@ public class RubiksClock : MonoBehaviour
 
         // Turn over
         TurnOverButton.OnInteract += delegate () { PressTurnOver(); return false; };
+
+        // Reset
+        ResetButton.OnInteract += delegate () { PressReset(); return false; };
 
         // Init modification actions
         _manualModActions.Add(new ModificationAction()
@@ -506,6 +510,19 @@ public class RubiksClock : MonoBehaviour
         _targetRotation *= Quaternion.AngleAxis(180, Vector3.forward);
     }
 
+    private void PressReset()
+    {
+        GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+        GetComponent<KMSelectable>().AddInteractionPunch();
+
+        ResetModule();
+    }
+
+    private void ResetModule()
+    {
+
+    }
+
     private void PressPin(int i)
     {
         GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
@@ -687,18 +704,19 @@ public class RubiksClock : MonoBehaviour
 
             IAnimation animation = _animationQueue.Dequeue();
 
-            // Rotate clocks
             if (animation is ClockAnimation)
             {
                 ClockAnimation clockAnimation = (ClockAnimation)animation;
                 int[] clocks = clockAnimation.Clocks;
+                Quaternion[] initialRotations = new Quaternion[clocks.Length];
                 Quaternion[] targetRotations = new Quaternion[clocks.Length];
                 for (int i = 0; i < clocks.Length; i++)
                 {
+                    initialRotations[i] = Clocks[i].transform.localRotation;
                     targetRotations[i] = Quaternion.Euler(Clocks[i].transform.localRotation.x, 30 * clocks[i], Clocks[i].transform.localRotation.z);
                 }
 
-                float duration = 2f;
+                float duration = .2f;
                 float elapsed = 0f;
 
                 while (elapsed < duration)
@@ -707,7 +725,7 @@ public class RubiksClock : MonoBehaviour
                     elapsed += Time.deltaTime;
                     for (int i = 0; i < clocks.Length; i++)
                     {
-                        Clocks[i].transform.localRotation = Quaternion.Lerp(Clocks[i].transform.localRotation, targetRotations[i], elapsed / duration);
+                        Clocks[i].transform.localRotation = Quaternion.Lerp(initialRotations[i], targetRotations[i], Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration));
                     }
                 }
             }
@@ -716,16 +734,17 @@ public class RubiksClock : MonoBehaviour
                 PinAnimation pinAnimation = (PinAnimation)animation;
                 int pin = pinAnimation.Pin;
                 bool position = pinAnimation.Position;
+                Vector3 initialPosition = Pins[pin].transform.localPosition;
                 Vector3 targetPosition = new Vector3(Pins[pin].transform.localPosition.x, (position ? .7f : -.7f), Pins[pin].transform.localPosition.z);
 
-                float duration = 2f;
+                float duration = .5f;
                 float elapsed = 0f;
 
                 while (elapsed < duration)
                 {
                     yield return null;
                     elapsed += Time.deltaTime;
-                    Pins[pin].transform.localPosition = Vector3.Lerp(Pins[pin].transform.localPosition, targetPosition, elapsed / duration);
+                    Pins[pin].transform.localPosition = Vector3.Lerp(initialPosition, targetPosition, Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration));
                 }
             }
         }
@@ -780,6 +799,7 @@ public class RubiksClock : MonoBehaviour
     struct ClockAnimation : IAnimation
     {
         public int[] Clocks { get; set; }
+        amount
     }
 
     struct PinAnimation : IAnimation
