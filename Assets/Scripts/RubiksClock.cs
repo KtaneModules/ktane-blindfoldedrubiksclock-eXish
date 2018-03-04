@@ -670,7 +670,7 @@ public class RubiksClock : MonoBehaviour
                 //Clocks[i].transform.Rotate(0, 30 * amount, 0);
             }
         }
-        _animationQueue.Enqueue(new ClockAnimation() { Clocks = (int[])_clocks.Clone() });
+        _animationQueue.Enqueue(new ClockAnimation() { Clocks = (int[])_clocks.Clone(), Amount = amount });
     }
 
     private void CheckState()
@@ -716,7 +716,7 @@ public class RubiksClock : MonoBehaviour
                     targetRotations[i] = Quaternion.Euler(Clocks[i].transform.localRotation.x, 30 * clocks[i], Clocks[i].transform.localRotation.z);
                 }
 
-                float duration = .2f;
+                float duration = .4f * clockAnimation.Amount;
                 float elapsed = 0f;
 
                 while (elapsed < duration)
@@ -737,7 +737,7 @@ public class RubiksClock : MonoBehaviour
                 Vector3 initialPosition = Pins[pin].transform.localPosition;
                 Vector3 targetPosition = new Vector3(Pins[pin].transform.localPosition.x, (position ? .7f : -.7f), Pins[pin].transform.localPosition.z);
 
-                float duration = .5f;
+                float duration = .4f;
                 float elapsed = 0f;
 
                 while (elapsed < duration)
@@ -799,7 +799,7 @@ public class RubiksClock : MonoBehaviour
     struct ClockAnimation : IAnimation
     {
         public int[] Clocks { get; set; }
-        amount
+        public int Amount { get; set; }
     }
 
     struct PinAnimation : IAnimation
