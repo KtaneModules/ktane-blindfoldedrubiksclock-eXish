@@ -534,6 +534,7 @@ public class RubiksClock : MonoBehaviour
     private void ChangePin(int i)
     {
         _pins[i] = !_pins[i];
+        Debug.LogFormat("Adding pin {0} to queue.", i);
         _animationQueue.Enqueue(new PinAnimation() { Pin = i, Position = _pins[i] });
     }
 
@@ -655,6 +656,7 @@ public class RubiksClock : MonoBehaviour
 
     private void RotateClocks(int amount, Boolean[] conditions)
     {
+        var clocksAtBegin = (int[])_clocks.Clone();
         for (var i = 0; i < conditions.Length; i++)
         {
             // For clocks on the back, switch direction
@@ -670,7 +672,9 @@ public class RubiksClock : MonoBehaviour
                 //Clocks[i].transform.Rotate(0, 30 * amount, 0);
             }
         }
-        _animationQueue.Enqueue(new ClockAnimation() { Clocks = (int[])_clocks.Clone(), Amount = amount });
+        var clocksAtEnd = (int[])_clocks.Clone();
+        Debug.LogFormat("Adding clocks {0} to queue.", string.Join(",", clocksAtEnd.Select(x => x.ToString()).ToArray()));
+        _animationQueue.Enqueue(new ClockAnimation() { Clocks = clocksAtEnd, Amount = amount });
     }
 
     private void CheckState()
@@ -707,6 +711,7 @@ public class RubiksClock : MonoBehaviour
             if (animation is ClockAnimation)
             {
                 ClockAnimation clockAnimation = (ClockAnimation)animation;
+                Debug.LogFormat("Playing clocks from {0} to {1}", string.Join(",", _clocks.Select(x => x.ToString()).ToArray()), string.Join(",", clockAnimation.Clocks.Select(x => x.ToString()).ToArray()));
                 int[] clocks = clockAnimation.Clocks;
                 Quaternion[] initialRotations = new Quaternion[clocks.Length];
                 Quaternion[] targetRotations = new Quaternion[clocks.Length];
@@ -716,7 +721,7 @@ public class RubiksClock : MonoBehaviour
                     targetRotations[i] = Quaternion.Euler(Clocks[i].transform.localRotation.x, 30 * clocks[i], Clocks[i].transform.localRotation.z);
                 }
 
-                float duration = .4f * clockAnimation.Amount;
+                float duration = 2f * clockAnimation.Amount;
                 float elapsed = 0f;
 
                 while (elapsed < duration)
@@ -732,12 +737,13 @@ public class RubiksClock : MonoBehaviour
             else if (animation is PinAnimation)
             {
                 PinAnimation pinAnimation = (PinAnimation)animation;
+                Debug.LogFormat("Playing pin {0}", pinAnimation.Pin);
                 int pin = pinAnimation.Pin;
                 bool position = pinAnimation.Position;
                 Vector3 initialPosition = Pins[pin].transform.localPosition;
                 Vector3 targetPosition = new Vector3(Pins[pin].transform.localPosition.x, (position ? .7f : -.7f), Pins[pin].transform.localPosition.z);
 
-                float duration = .4f;
+                float duration = 2f;
                 float elapsed = 0f;
 
                 while (elapsed < duration)
