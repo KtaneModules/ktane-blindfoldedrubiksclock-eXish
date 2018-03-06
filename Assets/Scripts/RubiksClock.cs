@@ -713,15 +713,15 @@ public class RubiksClock : MonoBehaviour
                 ClockAnimation clockAnimation = (ClockAnimation)animation;
                 Debug.LogFormat("Playing clocks from {0} to {1}", string.Join(",", _clocks.Select(x => x.ToString()).ToArray()), string.Join(",", clockAnimation.Clocks.Select(x => x.ToString()).ToArray()));
                 int[] clocks = clockAnimation.Clocks;
-                Quaternion[] initialRotations = new Quaternion[clocks.Length];
-                Quaternion[] targetRotations = new Quaternion[clocks.Length];
+                Vector3[] initialRotations = new Vector3[clocks.Length];
+                Vector3[] targetRotations = new Vector3[clocks.Length];
                 for (int i = 0; i < clocks.Length; i++)
                 {
-                    initialRotations[i] = Clocks[i].transform.localRotation;
-                    targetRotations[i] = Quaternion.Euler(Clocks[i].transform.localRotation.x, 30 * clocks[i], Clocks[i].transform.localRotation.z);
+                    initialRotations[i] = Clocks[i].transform.localEulerAngles;
+                    targetRotations[i] = new Vector3(Clocks[i].transform.localEulerAngles.x, 30 * clocks[i], Clocks[i].transform.localEulerAngles.z);
                 }
 
-                float duration = 2f * clockAnimation.Amount;
+                float duration = .4f * Math.Abs(clockAnimation.Amount);
                 float elapsed = 0f;
 
                 while (elapsed < duration)
@@ -730,7 +730,7 @@ public class RubiksClock : MonoBehaviour
                     elapsed += Time.deltaTime;
                     for (int i = 0; i < clocks.Length; i++)
                     {
-                        Clocks[i].transform.localRotation = Quaternion.Lerp(initialRotations[i], targetRotations[i], Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration));
+                        Clocks[i].transform.localEulerAngles = Vector3.Lerp(initialRotations[i], targetRotations[i], Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration));
                     }
                 }
             }
@@ -743,7 +743,7 @@ public class RubiksClock : MonoBehaviour
                 Vector3 initialPosition = Pins[pin].transform.localPosition;
                 Vector3 targetPosition = new Vector3(Pins[pin].transform.localPosition.x, (position ? .7f : -.7f), Pins[pin].transform.localPosition.z);
 
-                float duration = 2f;
+                float duration = .4f;
                 float elapsed = 0f;
 
                 while (elapsed < duration)
