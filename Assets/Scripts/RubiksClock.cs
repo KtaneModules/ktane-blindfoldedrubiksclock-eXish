@@ -68,7 +68,9 @@ public class RubiksClock : MonoBehaviour
     private List<ModificationAction> _manualModActions = new List<ModificationAction>();
     private List<ModificationAmount> _manualModAmounts = new List<ModificationAmount>();
     private List<Move> _moves = new List<Move>();
-    private Queue<IAnimation> _animationQueue = new Queue<IAnimation>();
+    private Queue<IAnimation> _playQueue = new Queue<IAnimation>();
+    private Stack<IAnimation> _resetQueue = new Stack<IAnimation>(); 
+        
 
     // Convert pin index to the other side
     private int[] _mirrorPin = new int[] { 1, 0, 3, 2 };
@@ -535,7 +537,7 @@ public class RubiksClock : MonoBehaviour
     {
         _pins[i] = !_pins[i];
         Debug.LogFormat("Adding pin {0} to queue.", i);
-        _animationQueue.Enqueue(new PinAnimation() { Pin = i, Position = _pins[i] });
+        _playQueue.Enqueue(new PinAnimation() { Pin = i, Position = _pins[i] });
     }
 
     private void PressGear(int i)
@@ -672,7 +674,8 @@ public class RubiksClock : MonoBehaviour
                 degrees[i] = amount * 30;
             }
         }
-        _animationQueue.Enqueue(new ClockAnimation() { Degrees = degrees, NumHours = Math.Abs(amount) });
+        _playQueue.Enqueue(new ClockAnimation() { Degrees = degrees, NumHours = Math.Abs(amount) });
+        // @todo _resetQueue.Push(new ClockAnimation() { Degrees = degrees, NumHours = Math.Abs(amount) });
     }
 
     private void CheckState()
@@ -699,12 +702,12 @@ public class RubiksClock : MonoBehaviour
     {
         while (true)
         {
-            while (_animationQueue.Count == 0)
+            while (_playQueue.Count == 0)
             {
                 yield return null;
             }
 
-            IAnimation animation = _animationQueue.Dequeue();
+            IAnimation animation = _playQueue.Dequeue();
 
             if (animation is ClockAnimation)
             {
@@ -715,10 +718,14 @@ public class RubiksClock : MonoBehaviour
                 for (var i = 0; i < degrees.Length; i++)
                 {
                     initialRotations[i] = Clocks[i].transform.localEulerAngles;
-                    targetRotations[i] = new Vector3(Clocks[i].transform.localEulerAngles.x, Clocks[i].transform.localEulerAngles.x + degrees[i], Clocks[i].transform.localEulerAngles.z);
+                    targetRotations[i] = new Vector3(
+                        Clocks[i].transform.localEulerAngles.x,
+                        Clocks[i].transform.localEulerAngles.y + degrees[i],
+                        Clocks[i].transform.localEulerAngles.z
+                        );
                 }
 
-                float duration = .4f * Math.Abs(clockAnimation.NumHours);
+                float duration = .2f * Math.Abs(clockAnimation.NumHours);
                 float elapsed = 0f;
 
                 while (elapsed < duration)
@@ -730,6 +737,7 @@ public class RubiksClock : MonoBehaviour
                         Clocks[i].transform.localEulerAngles = Vector3.Lerp(initialRotations[i], targetRotations[i], Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration));
                     }
                 }
+                Debug.Log("Clock ani finished");
             }
             else if (animation is PinAnimation)
             {
@@ -740,7 +748,7 @@ public class RubiksClock : MonoBehaviour
                 Vector3 initialPosition = Pins[pin].transform.localPosition;
                 Vector3 targetPosition = new Vector3(Pins[pin].transform.localPosition.x, (position ? .7f : -.7f), Pins[pin].transform.localPosition.z);
 
-                float duration = .4f;
+                float duration = .2f;
                 float elapsed = 0f;
 
                 while (elapsed < duration)
