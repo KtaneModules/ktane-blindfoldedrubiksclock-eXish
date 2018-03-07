@@ -656,7 +656,7 @@ public class RubiksClock : MonoBehaviour
 
     private void RotateClocks(int amount, Boolean[] conditions)
     {
-        var clocksAtBegin = (int[])_clocks.Clone();
+        var degrees = new int[18];
         for (var i = 0; i < conditions.Length; i++)
         {
             // For clocks on the back, switch direction
@@ -669,12 +669,10 @@ public class RubiksClock : MonoBehaviour
             {
                 // Adding a large product of 12 for extreme conditions, making sure clocks stay positive ints
                 _clocks[i] = (_clocks[i] + amount + 144) % 12;
-                //Clocks[i].transform.Rotate(0, 30 * amount, 0);
+                degrees[i] = amount * 30;
             }
         }
-        var clocksAtEnd = (int[])_clocks.Clone();
-        Debug.LogFormat("Adding clocks {0} to queue.", string.Join(",", clocksAtEnd.Select(x => x.ToString()).ToArray()));
-        _animationQueue.Enqueue(new ClockAnimation() { Clocks = clocksAtEnd, Amount = amount });
+        _animationQueue.Enqueue(new ClockAnimation() { Degrees = degrees, NumHours = Math.Abs(amount) });
     }
 
     private void CheckState()
@@ -710,25 +708,24 @@ public class RubiksClock : MonoBehaviour
 
             if (animation is ClockAnimation)
             {
-                ClockAnimation clockAnimation = (ClockAnimation)animation;
-                Debug.LogFormat("Playing clocks from {0} to {1}", string.Join(",", _clocks.Select(x => x.ToString()).ToArray()), string.Join(",", clockAnimation.Clocks.Select(x => x.ToString()).ToArray()));
-                int[] clocks = clockAnimation.Clocks;
-                Vector3[] initialRotations = new Vector3[clocks.Length];
-                Vector3[] targetRotations = new Vector3[clocks.Length];
-                for (int i = 0; i < clocks.Length; i++)
+                var clockAnimation = (ClockAnimation)animation;
+                var degrees = clockAnimation.Degrees;
+                var initialRotations = new Vector3[degrees.Length];
+                var targetRotations = new Vector3[degrees.Length];
+                for (var i = 0; i < degrees.Length; i++)
                 {
                     initialRotations[i] = Clocks[i].transform.localEulerAngles;
-                    targetRotations[i] = new Vector3(Clocks[i].transform.localEulerAngles.x, 30 * clocks[i], Clocks[i].transform.localEulerAngles.z);
+                    targetRotations[i] = new Vector3(Clocks[i].transform.localEulerAngles.x, Clocks[i].transform.localEulerAngles.x + degrees[i], Clocks[i].transform.localEulerAngles.z);
                 }
 
-                float duration = .4f * Math.Abs(clockAnimation.Amount);
+                float duration = .4f * Math.Abs(clockAnimation.NumHours);
                 float elapsed = 0f;
 
                 while (elapsed < duration)
                 {
                     yield return null;
                     elapsed += Time.deltaTime;
-                    for (int i = 0; i < clocks.Length; i++)
+                    for (int i = 0; i < degrees.Length; i++)
                     {
                         Clocks[i].transform.localEulerAngles = Vector3.Lerp(initialRotations[i], targetRotations[i], Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration));
                     }
@@ -804,8 +801,8 @@ public class RubiksClock : MonoBehaviour
 
     struct ClockAnimation : IAnimation
     {
-        public int[] Clocks { get; set; }
-        public int Amount { get; set; }
+        public int[] Degrees { get; set; }
+        public int NumHours { get; set; }
     }
 
     struct PinAnimation : IAnimation
