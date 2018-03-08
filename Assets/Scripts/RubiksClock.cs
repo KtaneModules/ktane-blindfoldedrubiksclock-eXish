@@ -6,9 +6,13 @@ using Rnd = UnityEngine.Random;
 using KmHelper;
 using System.Collections;
 
-/// TO DO:
-///  KT3DText shader for non-see-thru text
-///  Set module ID
+/// <summary>
+/// @TODO:
+/// - Reset doesn't change internal clock hours??
+/// - Only combine clock animations in reset stack if they originate from the same gear.
+/// - Add custom sound to rotating gears.
+/// - Check direction on back clocks??
+/// </summary>
 public class RubiksClock : MonoBehaviour
 {
     public KMBombInfo Bomb;
@@ -18,7 +22,7 @@ public class RubiksClock : MonoBehaviour
     public GameObject[] Clocks;
     public KMSelectable TurnOverButton;
     public KMSelectable ResetButton;
-    private Boolean[] _pins;
+    private bool[] _pins = new bool[4];
     private int[] _clocks;
     private Quaternion _targetRotation;
     private int[,,] _manualMoves = new int[4, 9, 4]
@@ -68,9 +72,8 @@ public class RubiksClock : MonoBehaviour
     private List<ModificationAction> _manualModActions = new List<ModificationAction>();
     private List<ModificationAmount> _manualModAmounts = new List<ModificationAmount>();
     private List<Move> _moves = new List<Move>();
-    private Queue<IAnimation> _playQueue = new Queue<IAnimation>();
-    private Stack<IAnimation> _resetQueue = new Stack<IAnimation>(); 
-        
+    private Queue<IAnimation> _animationQueue = new Queue<IAnimation>();
+    private Stack<IAnimation> _resetStack = new Stack<IAnimation>();
 
     // Convert pin index to the other side
     private int[] _mirrorPin = new int[] { 1, 0, 3, 2 };
@@ -90,6 +93,7 @@ public class RubiksClock : MonoBehaviour
             Bomb.GetOffIndicators().Count(),
             Bomb.GetPortCount()
         );
+
         // Gear buttons
         for (int i = 0; i < GearButtons.Length; i++)
         {
@@ -98,8 +102,7 @@ public class RubiksClock : MonoBehaviour
         }
 
         // Pins
-        _pins = new Boolean[Pins.Length];
-        for (int i = 0; i < Pins.Length; i++)
+        for (var i = 0; i < Pins.Length; i++)
         {
             var j = i;
             Pins[i].OnInteract += delegate () { PressPin(j); return false; };
@@ -288,7 +291,6 @@ public class RubiksClock : MonoBehaviour
 
         // Scramble
         Scramble(4);
-
         foreach (Move move in _moves)
         {
             Debug.LogFormat(
@@ -324,18 +326,18 @@ public class RubiksClock : MonoBehaviour
         bool onFrontSide = true;
 
         // Determine first modifications, using ascii conversion to convert ABC to 0, DEF to 1, etc.
-        string sn = Bomb.GetSerialNumber();
-        int firstModificationAction1 = (Char.IsDigit(sn[0]) ? (int)sn[0] - 22 : (int)sn[0] - 65) / 3;
-        int firstModificationAmount1 = (Char.IsDigit(sn[1]) ? (int)sn[1] - 22 : (int)sn[1] - 65) / 3;
-        int firstModificationAction2 = (Char.IsDigit(sn[2]) ? (int)sn[2] - 22 : (int)sn[2] - 65) / 3;
-        int firstModificationAmount2 = (Char.IsDigit(sn[3]) ? (int)sn[3] - 22 : (int)sn[3] - 65) / 3;
+        var sn = Bomb.GetSerialNumber();
+        var firstModificationAction1 = (Char.IsDigit(sn[0]) ? (int)sn[0] - 22 : (int)sn[0] - 65) / 3;
+        var firstModificationAmount1 = (Char.IsDigit(sn[1]) ? (int)sn[1] - 22 : (int)sn[1] - 65) / 3;
+        var firstModificationAction2 = (Char.IsDigit(sn[2]) ? (int)sn[2] - 22 : (int)sn[2] - 65) / 3;
+        var firstModificationAmount2 = (Char.IsDigit(sn[3]) ? (int)sn[3] - 22 : (int)sn[3] - 65) / 3;
         Debug.LogFormat(
             "First mod action1: {0}, amount1: {1}, action2: {2}, amount2: {3}",
             firstModificationAction1, firstModificationAmount1, firstModificationAction2, firstModificationAmount2
             );
 
         // Apply moves
-        for (int curMove = 0; curMove < numMoves; curMove++)
+        for (var curMove = 0; curMove < numMoves; curMove++)
         {
             // Turn over
             onFrontSide = !onFrontSide;
@@ -371,9 +373,9 @@ public class RubiksClock : MonoBehaviour
                 )
                 {
                     // Convert big and small to 0-5 by 0-5 coordinate for easier movement
-                    int col = (move.BigSquare % 3) * 2 + (move.SmallSquare % 2);
-                    int row = (move.BigSquare / 3) * 2 + (move.SmallSquare / 2);
-                    int step = (modification.Action.MainType == ModificationAction.MainTypeEnum.MoveBig ? 2 : 1);
+                    var col = (move.BigSquare % 3) * 2 + (move.SmallSquare % 2);
+                    var row = (move.BigSquare / 3) * 2 + (move.SmallSquare / 2);
+                    var step = (modification.Action.MainType == ModificationAction.MainTypeEnum.MoveBig ? 2 : 1);
 
                     // Apply move
                     switch (modification.Action.Direction)
@@ -399,8 +401,8 @@ public class RubiksClock : MonoBehaviour
             }
 
             // Initial rotation
-            int gear = _manualMoves[move.SmallSquare, move.BigSquare, 2];
-            int amount = _manualMoves[move.SmallSquare, move.BigSquare, 3];
+            var gear = _manualMoves[move.SmallSquare, move.BigSquare, 2];
+            var amount = _manualMoves[move.SmallSquare, move.BigSquare, 3];
 
             // Apply "rotate" modifications
             foreach (Modification modification in move.Modifications)
@@ -437,14 +439,14 @@ public class RubiksClock : MonoBehaviour
             move.ClocksAtStart = (int[])_clocks.Clone();
 
             // Initial pins to change
-            int pin1 = _manualMoves[move.SmallSquare, move.BigSquare, 0];
-            int pin2 = _manualMoves[move.SmallSquare, move.BigSquare, 1];
+            var pin1 = _manualMoves[move.SmallSquare, move.BigSquare, 0];
+            var pin2 = _manualMoves[move.SmallSquare, move.BigSquare, 1];
             if (!move.OnFrontSide)
             {
                 pin1 = _mirrorPin[pin1];
                 pin2 = _mirrorPin[pin2];
             }
-            bool[] changePins = new bool[4];
+            var changePins = new bool[4];
             changePins[pin1] = true;
             changePins[pin2] = true;
 
@@ -456,7 +458,7 @@ public class RubiksClock : MonoBehaviour
                     (modification.Amount.Quantity % 2 == 0)
                 )
                 {
-                    for (int i = 0; i < changePins.Length; i++)
+                    for (var i = 0; i < changePins.Length; i++)
                     {
                         changePins[i] = !changePins[i];
                     }
@@ -464,7 +466,7 @@ public class RubiksClock : MonoBehaviour
             }
 
             // Change pins
-            for (int i = 0; i < 4; i++)
+            for (var i = 0; i < 4; i++)
             {
                 if (changePins[i]) ChangePin(i);
             }
@@ -476,17 +478,17 @@ public class RubiksClock : MonoBehaviour
 
     private void LightPinAndClock(Move move)
     {
-        int litPin = move.OnFrontSide ? move.LitPin : _mirrorPin[move.LitPin];
-        int litClockFront = move.OnFrontSide ? move.LitClock : _mirrorClock[move.LitClock];
-        int litClockBack = move.OnFrontSide ? (move.LitClock + 9) : (_mirrorClock[move.LitClock] + 9);
+        var litPin = move.OnFrontSide ? move.LitPin : _mirrorPin[move.LitPin];
+        var litClockFront = move.OnFrontSide ? move.LitClock : _mirrorClock[move.LitClock];
+        var litClockBack = move.OnFrontSide ? (move.LitClock + 9) : (_mirrorClock[move.LitClock] + 9);
 
-        for (int i = 0; i < Pins.Length; i++)
+        for (var i = 0; i < Pins.Length; i++)
         {
             Pins[i].transform.Find("PinLightFront").GetComponent<Light>().enabled = (i == litPin);
             Pins[i].transform.Find("PinLightBack").GetComponent<Light>().enabled = (i == litPin);
         }
 
-        for (int i = 0; i < Clocks.Length; i++)
+        for (var i = 0; i < Clocks.Length; i++)
         {
             Clocks[i].transform.Find("ClockLight").GetComponent<Light>().enabled = (i == litClockFront || i == litClockBack);
         }
@@ -522,14 +524,14 @@ public class RubiksClock : MonoBehaviour
 
     private void ResetModule()
     {
-
+        while (_resetStack.Count > 0)
+        {
+            _animationQueue.Enqueue(_resetStack.Pop());
+        }
     }
 
     private void PressPin(int i)
     {
-        GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        GetComponent<KMSelectable>().AddInteractionPunch(.5f);
-
         ChangePin(i);
     }
 
@@ -537,19 +539,17 @@ public class RubiksClock : MonoBehaviour
     {
         _pins[i] = !_pins[i];
         Debug.LogFormat("Adding pin {0} to queue.", i);
-        _playQueue.Enqueue(new PinAnimation() { Pin = i, Position = _pins[i] });
+        _animationQueue.Enqueue(new PinAnimation() { Pin = i, Position = _pins[i] });
+        _resetStack.Push(new PinAnimation() { Pin = i, Position = !_pins[i] });
     }
 
     private void PressGear(int i)
     {
-        GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-        GetComponent<KMSelectable>().AddInteractionPunch(.1f);
-
         // 0=TL, 1=TR, 2=BL, 3=BR
-        int gear = i / 2;
+        var gear = i / 2;
 
         // -1=CCW, 1=CW
-        int amount = (i % 2) * 2 - 1;
+        var amount = (i % 2) * 2 - 1;
 
         RotateGear(gear, amount);
         CheckState();
@@ -658,7 +658,7 @@ public class RubiksClock : MonoBehaviour
 
     private void RotateClocks(int amount, Boolean[] conditions)
     {
-        var degrees = new int[18];
+        var hourChanges = new int[18];
         for (var i = 0; i < conditions.Length; i++)
         {
             // For clocks on the back, switch direction
@@ -671,11 +671,29 @@ public class RubiksClock : MonoBehaviour
             {
                 // Adding a large product of 12 for extreme conditions, making sure clocks stay positive ints
                 _clocks[i] = (_clocks[i] + amount + 144) % 12;
-                degrees[i] = amount * 30;
+                hourChanges[i] = amount;
             }
         }
-        _playQueue.Enqueue(new ClockAnimation() { Degrees = degrees, NumHours = Math.Abs(amount) });
-        // @todo _resetQueue.Push(new ClockAnimation() { Degrees = degrees, NumHours = Math.Abs(amount) });
+
+        // Enqueue the animation
+        _animationQueue.Enqueue(new ClockAnimation() { HourChanges = hourChanges });
+
+        // Record the steps so we can reset the clocks later
+        // If the previous step
+        if (_resetStack.Count > 0 && _resetStack.Peek() is ClockAnimation)
+        {
+            var clockAnimation = (ClockAnimation)_resetStack.Pop();
+            for (var i = 0; i < clockAnimation.HourChanges.Length; i++)
+            {
+                clockAnimation.HourChanges[i] -= hourChanges[i];
+            }
+            _resetStack.Push(clockAnimation);
+        }
+        else
+        {
+            _resetStack.Push(new ClockAnimation() { HourChanges = hourChanges.Select(i => -i).ToArray() });
+
+        }
     }
 
     private void CheckState()
@@ -690,6 +708,7 @@ public class RubiksClock : MonoBehaviour
         // If the clocks are in the starting position of a move
         foreach (Move move in _moves)
         {
+            // Light the pin and clock belonging to the move
             if (_clocks.SequenceEqual(move.ClocksAtStart))
             {
                 LightPinAndClock(move);
@@ -702,60 +721,77 @@ public class RubiksClock : MonoBehaviour
     {
         while (true)
         {
-            while (_playQueue.Count == 0)
+            while (_animationQueue.Count == 0)
             {
                 yield return null;
             }
 
-            IAnimation animation = _playQueue.Dequeue();
+            IAnimation animation = _animationQueue.Dequeue();
 
             if (animation is ClockAnimation)
             {
+                Debug.Log(string.Join(", ", _clocks.Select(x => x.ToString()).ToArray()));
+                GetComponent<KMAudio>().PlaySoundAtTransform("GearClick", transform);
+                GetComponent<KMSelectable>().AddInteractionPunch(.1f);
+
                 var clockAnimation = (ClockAnimation)animation;
-                var degrees = clockAnimation.Degrees;
-                var initialRotations = new Vector3[degrees.Length];
-                var targetRotations = new Vector3[degrees.Length];
-                for (var i = 0; i < degrees.Length; i++)
+                var hourChanges = clockAnimation.HourChanges;
+                var initialRotations = new Vector3[hourChanges.Length];
+                var targetRotations = new Vector3[hourChanges.Length];
+                for (var i = 0; i < hourChanges.Length; i++)
                 {
                     initialRotations[i] = Clocks[i].transform.localEulerAngles;
                     targetRotations[i] = new Vector3(
                         Clocks[i].transform.localEulerAngles.x,
-                        Clocks[i].transform.localEulerAngles.y + degrees[i],
+                        Clocks[i].transform.localEulerAngles.y + hourChanges[i] * 30,
                         Clocks[i].transform.localEulerAngles.z
-                        );
+                    );
                 }
 
-                float duration = .2f * Math.Abs(clockAnimation.NumHours);
-                float elapsed = 0f;
+                var duration = .2f * clockAnimation.HourChanges.Max(i => Math.Abs(i));
+                var elapsed = 0f;
 
                 while (elapsed < duration)
                 {
                     yield return null;
                     elapsed += Time.deltaTime;
-                    for (int i = 0; i < degrees.Length; i++)
+                    for (var i = 0; i < hourChanges.Length; i++)
                     {
-                        Clocks[i].transform.localEulerAngles = Vector3.Lerp(initialRotations[i], targetRotations[i], Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration));
+                        Clocks[i].transform.localEulerAngles = Vector3.Lerp(
+                            initialRotations[i],
+                            targetRotations[i],
+                            Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration)
+                        );
                     }
                 }
-                Debug.Log("Clock ani finished");
             }
             else if (animation is PinAnimation)
             {
-                PinAnimation pinAnimation = (PinAnimation)animation;
-                Debug.LogFormat("Playing pin {0}", pinAnimation.Pin);
-                int pin = pinAnimation.Pin;
-                bool position = pinAnimation.Position;
-                Vector3 initialPosition = Pins[pin].transform.localPosition;
-                Vector3 targetPosition = new Vector3(Pins[pin].transform.localPosition.x, (position ? .7f : -.7f), Pins[pin].transform.localPosition.z);
+                GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BigButtonPress, transform);
+                GetComponent<KMSelectable>().AddInteractionPunch(.5f);
 
-                float duration = .2f;
-                float elapsed = 0f;
+                var pinAnimation = (PinAnimation)animation;
+                var pin = pinAnimation.Pin;
+                var position = pinAnimation.Position;
+                var initialPosition = Pins[pin].transform.localPosition;
+                var targetPosition = new Vector3(
+                    Pins[pin].transform.localPosition.x,
+                    (position ? .7f : -.7f),
+                    Pins[pin].transform.localPosition.z
+                );
+
+                var duration = .2f;
+                var elapsed = 0f;
 
                 while (elapsed < duration)
                 {
                     yield return null;
                     elapsed += Time.deltaTime;
-                    Pins[pin].transform.localPosition = Vector3.Lerp(initialPosition, targetPosition, Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration));
+                    Pins[pin].transform.localPosition = Vector3.Lerp(
+                        initialPosition,
+                        targetPosition,
+                        Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration)
+                    );
                 }
             }
         }
@@ -809,8 +845,7 @@ public class RubiksClock : MonoBehaviour
 
     struct ClockAnimation : IAnimation
     {
-        public int[] Degrees { get; set; }
-        public int NumHours { get; set; }
+        public int[] HourChanges { get; set; }
     }
 
     struct PinAnimation : IAnimation

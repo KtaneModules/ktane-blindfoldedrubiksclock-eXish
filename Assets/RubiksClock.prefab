@@ -7856,8 +7856,8 @@ MonoBehaviour:
   m_Script: {fileID: -119419473, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ModuleType: 
-  ModuleDisplayName: 
+  ModuleType: rubiksClock
+  ModuleDisplayName: Rubik's Clock
   RequiresTimerVisibility: 0
 --- !u!114 &114572085262477754
 MonoBehaviour:
@@ -8076,8 +8076,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Parent: {fileID: 0}
   Children:
-  - {fileID: 114967018839332086}
-  - {fileID: 114967018839332086}
+  - {fileID: 114538906585248478}
+  - {fileID: 114538906585248478}
   - {fileID: 114967018839332086}
   - {fileID: 114967018839332086}
   - {fileID: 114084786577901396}
