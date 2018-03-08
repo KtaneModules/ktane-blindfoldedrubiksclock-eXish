@@ -9,7 +9,6 @@ using System.Collections;
 /// <summary>
 /// @TODO:
 /// - Reset doesn't change internal clock hours??
-/// - Only combine clock animations in reset stack if they originate from the same gear.
 /// - Add custom sound to rotating gears.
 /// - Check direction on back clocks??
 /// </summary>
@@ -74,11 +73,12 @@ public class RubiksClock : MonoBehaviour
     private List<Move> _moves = new List<Move>();
     private Queue<IAnimation> _animationQueue = new Queue<IAnimation>();
     private Stack<IAnimation> _resetStack = new Stack<IAnimation>();
+    private bool _isScrambling, _isResetting;
 
     // Convert pin index to the other side
     private int[] _mirrorPin = new int[] { 1, 0, 3, 2 };
 
-    // Convert clock index to the other side
+    // Convert clock index to the other sc
     private int[] _mirrorClock = new int[] { 2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9, 14, 13, 12, 17, 16, 15 };
 
     // Called once at start
@@ -283,12 +283,6 @@ public class RubiksClock : MonoBehaviour
         // Init target rotation
         _targetRotation = ClockPuzzle.transform.localRotation;
 
-        // Random end position for pins
-        for (int i = 0; i < 4; i++)
-        {
-            if (Rnd.Range(0, 2) == 1) ChangePin(i);
-        }
-
         // Scramble
         Scramble(4);
         foreach (Move move in _moves)
@@ -323,6 +317,8 @@ public class RubiksClock : MonoBehaviour
     /// </summary>
     private void Scramble(int numMoves)
     {
+        _isScrambling = true;
+
         bool onFrontSide = true;
 
         // Determine first modifications, using ascii conversion to convert ABC to 0, DEF to 1, etc.
@@ -474,6 +470,8 @@ public class RubiksClock : MonoBehaviour
             // Add to scramble
             _moves.Insert(0, move);
         }
+
+        _isScrambling = false;
     }
 
     private void LightPinAndClock(Move move)
@@ -540,7 +538,10 @@ public class RubiksClock : MonoBehaviour
         _pins[i] = !_pins[i];
         Debug.LogFormat("Adding pin {0} to queue.", i);
         _animationQueue.Enqueue(new PinAnimation() { Pin = i, Position = _pins[i] });
-        _resetStack.Push(new PinAnimation() { Pin = i, Position = !_pins[i] });
+        if (!_isScrambling)
+        {
+            _resetStack.Push(new PinAnimation() { Pin = i, Position = !_pins[i] });
+        }
     }
 
     private void PressGear(int i)
@@ -562,7 +563,7 @@ public class RubiksClock : MonoBehaviour
         switch (gear)
         {
             case 0:
-                RotateClocks(amount, new Boolean[] {
+                RotateClocks(gear, amount, new Boolean[] {
                     true,
                     _pins[0],
                     (_pins[0] && _pins[1]) || (!_pins[0] && !_pins[1]),
@@ -585,7 +586,7 @@ public class RubiksClock : MonoBehaviour
                 });
                 break;
             case 1:
-                RotateClocks(amount, new Boolean[] {
+                RotateClocks(gear, amount, new Boolean[] {
                     (_pins[1] && _pins[0]) || (!_pins[1] && !_pins[0]),
                     _pins[1],
                     true,
@@ -608,7 +609,7 @@ public class RubiksClock : MonoBehaviour
                 });
                 break;
             case 2:
-                RotateClocks(amount, new Boolean[] {
+                RotateClocks(gear, amount, new Boolean[] {
                     (_pins[2] && _pins[0]) || (!_pins[2] && !_pins[0]),
                     _pins[2] && (_pins[0] || _pins[1]),
                     (_pins[2] && _pins[1]) || (!_pins[2] && !_pins[1]),
@@ -631,7 +632,7 @@ public class RubiksClock : MonoBehaviour
                 });
                 break;
             case 3:
-                RotateClocks(amount, new Boolean[] {
+                RotateClocks(gear, amount, new Boolean[] {
                     (_pins[3] && _pins[0]) || (!_pins[3] && !_pins[0]),
                     _pins[3] && (_pins[1] || _pins[0]),
                     (_pins[3] && _pins[1]) || (!_pins[3] && !_pins[1]),
@@ -656,7 +657,7 @@ public class RubiksClock : MonoBehaviour
         }
     }
 
-    private void RotateClocks(int amount, Boolean[] conditions)
+    private void RotateClocks(int gear, int amount, Boolean[] conditions)
     {
         var hourChanges = new int[18];
         for (var i = 0; i < conditions.Length; i++)
@@ -679,20 +680,27 @@ public class RubiksClock : MonoBehaviour
         _animationQueue.Enqueue(new ClockAnimation() { HourChanges = hourChanges });
 
         // Record the steps so we can reset the clocks later
-        // If the previous step
-        if (_resetStack.Count > 0 && _resetStack.Peek() is ClockAnimation)
+        // If the previous step was a rotation on the same gear, merge it with this one
+        if (!_isScrambling)
         {
-            var clockAnimation = (ClockAnimation)_resetStack.Pop();
-            for (var i = 0; i < clockAnimation.HourChanges.Length; i++)
+            if (
+                _resetStack.Count > 0
+                && _resetStack.Peek() is ClockAnimation
+                && ((ClockAnimation)_resetStack.Peek()).Gear == gear
+            )
             {
-                clockAnimation.HourChanges[i] -= hourChanges[i];
+                var clockAnimation = (ClockAnimation)_resetStack.Pop();
+                for (var i = 0; i < clockAnimation.HourChanges.Length; i++)
+                {
+                    clockAnimation.HourChanges[i] -= hourChanges[i];
+                }
+                _resetStack.Push(clockAnimation);
             }
-            _resetStack.Push(clockAnimation);
-        }
-        else
-        {
-            _resetStack.Push(new ClockAnimation() { HourChanges = hourChanges.Select(i => -i).ToArray() });
+            else
+            {
+                _resetStack.Push(new ClockAnimation() { HourChanges = hourChanges.Select(i => -i).ToArray(), Gear = gear });
 
+            }
         }
     }
 
@@ -846,6 +854,7 @@ public class RubiksClock : MonoBehaviour
     struct ClockAnimation : IAnimation
     {
         public int[] HourChanges { get; set; }
+        public int Gear { get; set; }
     }
 
     struct PinAnimation : IAnimation
