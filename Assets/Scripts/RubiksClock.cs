@@ -21,8 +21,20 @@ public class RubiksClock : MonoBehaviour
     public GameObject[] Clocks;
     public KMSelectable TurnOverButton;
     public KMSelectable ResetButton;
+
+    // Front:
+    // 0 1
+    // 2 3
     private bool[] _pins = new bool[4];
-    private int[] _clocks;
+    private bool[] _scrambledPins = new bool[4];
+
+    // Front:     Back:
+    // 0  1  2    11 10 9
+    // 3  4  5    14 13 12
+    // 6  7  8    17 16 15
+    private int[] _clocks = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    private int[] _scrambledClocks = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
     private Quaternion _targetRotation;
     private int[,,] _manualMoves = new int[4, 9, 4]
     {
@@ -273,13 +285,6 @@ public class RubiksClock : MonoBehaviour
             Quantity = Bomb.GetIndicators().Count() + 1,
         });
 
-        // Clocks
-        // Front:     Back:
-        // 0  1  2    11 10 9
-        // 3  4  5    14 13 12
-        // 6  7  8    17 16 15
-        _clocks = Enumerable.Repeat(0, 18).ToArray();
-
         // Init target rotation
         _targetRotation = ClockPuzzle.transform.localRotation;
 
@@ -471,6 +476,10 @@ public class RubiksClock : MonoBehaviour
             _moves.Insert(0, move);
         }
 
+        // Save scrambled state for reset
+        _scrambledClocks = (int[])_clocks.Clone();
+        _scrambledPins = (bool[])_pins.Clone();
+
         _isScrambling = false;
     }
 
@@ -526,6 +535,10 @@ public class RubiksClock : MonoBehaviour
         {
             _animationQueue.Enqueue(_resetStack.Pop());
         }
+
+        // Reset to scrambled state
+        _clocks = (int[])_scrambledClocks.Clone();
+        _pins = (bool[])_scrambledPins.Clone();
     }
 
     private void PressPin(int i)
