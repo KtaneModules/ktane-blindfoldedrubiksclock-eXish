@@ -147,6 +147,11 @@ Prefab:
       propertyPath: m_RootOrder
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 114446281453736500, guid: 619e67f8674852643a694609d38c4670,
+        type: 2}
+      propertyPath: Knopje
+      value: 
+      objectReference: {fileID: 1938907000}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 619e67f8674852643a694609d38c4670, type: 2}
   m_IsPrefabParent: 0
@@ -360,3 +365,8 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8814ea52310d2614a9feda02ec355ae4, type: 2}
   m_IsPrefabParent: 0
+--- !u!1 &1938907000 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1899438270990268, guid: 619e67f8674852643a694609d38c4670,
+    type: 2}
+  m_PrefabInternal: {fileID: 190528605}

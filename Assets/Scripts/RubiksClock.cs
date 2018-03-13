@@ -835,6 +835,12 @@ public class RubiksClock : MonoBehaviour
                 var turnOverAnimation = (TurnOverAnimation)animation;
                 var initialRotation = ClockPuzzle.transform.localEulerAngles;
                 var targetRotation = new Vector3(0, 0, turnOverAnimation.ToFrontSide ? 0 : 180);
+                var initialPosition = ClockPuzzle.transform.localPosition;
+                var targetPosition = new Vector3(
+                    ClockPuzzle.transform.localPosition.x,
+                    ClockPuzzle.transform.localPosition.y + .06f,
+                    ClockPuzzle.transform.localPosition.z
+                );
 
                 var duration = 1f;
                 var elapsed = 0f;
@@ -848,7 +854,12 @@ public class RubiksClock : MonoBehaviour
                         targetRotation,
                         Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration)
                     );
-                }
+/*                    ClockPuzzle.transform.localPosition = Vector3.Lerp(
+                        initialPosition,
+                        targetPosition,
+                        Mathf.SmoothStep(0.0f, 1.0f, elapsed < (duration / 2) ? (elapsed / duration * 2) : (elapsed / duration * -2 + 2))
+                    );
+ */               }
             }
         }
     }
