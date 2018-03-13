@@ -8,7 +8,8 @@ using System.Collections;
 
 /// <summary>
 /// @TODO:
-/// - Add custom sound to rotating gears.
+//2) Log all of the steps necessary to solve it.You currently do this, and I’m happy with it myself, but it’s possible some users will want to see the actual pins / rotations they need to make.If it had logged that, I would have found the above discrepancy faster.
+//3) Log all of the steps the user made, but preferably not as a long slew of individual log messages for every button press.In Rubik’s Cube and a few similar modules, I keep a list of all the moves the user made; then I output them all to the log(and clear the list) every time the user presses Reset, or the module is solved, or the bomb explodes.
 /// </summary>
 public class RubiksClock : MonoBehaviour
 {
@@ -89,11 +90,17 @@ public class RubiksClock : MonoBehaviour
     // Convert clock index to the other sc
     private int[] _mirrorClock = new int[] { 2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9, 14, 13, 12, 17, 16, 15 };
 
+    private int _moduleId;
+    private static int _moduleIdCounter = 1;
+
     // Called once at start
     void Start()
     {
+        _moduleId = _moduleIdCounter++;
+
         Debug.LogFormat(
-            "Serial={0} AA={1} D={2} Lit={3} Unlit={4} Ports={5}",
+            "[Rubik's Clock #{0}] Serial={1} AA={2} D={3} Lit={4} Unlit={5} Ports={6}",
+            _moduleId,
             Bomb.GetSerialNumber(),
             Bomb.GetBatteryCount(Battery.AA),
             Bomb.GetBatteryCount(Battery.D),
@@ -286,15 +293,16 @@ public class RubiksClock : MonoBehaviour
         foreach (Move move in _moves)
         {
             Debug.LogFormat(
-                "Lit clock: {0}, lit pin: {1}, {2} for {3} ({4}), {5} for {6} ({7}).",
+                "[Rubik's Clock #{0}] Lit clock: {1}. Lit pin: {2}. {3}, x = {4} = {5}. {6}, x = {7} = {8}. After 'Move' modifications; Big square: {9}, Small square: {10}. After all modifications; Change pins {11}, Rotate gear {12} for {13}.",
+                _moduleId,
                 move.LitClock,
                 move.LitPin,
                 move.Modifications[0].Action.Description,
-                move.Modifications[0].Amount.Quantity,
                 move.Modifications[0].Amount.Description,
+                move.Modifications[0].Amount.Quantity,
                 move.Modifications[1].Action.Description,
-                move.Modifications[1].Amount.Quantity,
-                move.Modifications[1].Amount.Description
+                move.Modifications[1].Amount.Description,
+                move.Modifications[1].Amount.Quantity
             );
         }
 
@@ -327,8 +335,8 @@ public class RubiksClock : MonoBehaviour
         var firstModificationAction2 = (Char.IsDigit(sn[2]) ? (int)sn[2] - 22 : (int)sn[2] - 65) / 3;
         var firstModificationAmount2 = (Char.IsDigit(sn[3]) ? (int)sn[3] - 22 : (int)sn[3] - 65) / 3;
         Debug.LogFormat(
-            "First mod action1: {0}, amount1: {1}, action2: {2}, amount2: {3}",
-            firstModificationAction1, firstModificationAmount1, firstModificationAction2, firstModificationAmount2
+            "[Rubik's Clock #{0}] First mod action1: {1}, amount1: {2}, action2: {3}, amount2: {4}",
+            _moduleId, firstModificationAction1, firstModificationAmount1, firstModificationAction2, firstModificationAmount2
             );
 
         // Apply moves
@@ -421,6 +429,7 @@ public class RubiksClock : MonoBehaviour
                         : -modification.Amount.Quantity;
                 }
             }
+            move.Amount = amount;
 
             // Invert rotation if on back side
             if (!move.OnFrontSide)
@@ -464,6 +473,7 @@ public class RubiksClock : MonoBehaviour
             {
                 if (changePins[i]) ChangePin(i);
             }
+            move.Pins = changePins;
 
             // Add to scramble
             move.ClocksAtStart = (int[])_clocks.Clone();
@@ -881,8 +891,13 @@ public class RubiksClock : MonoBehaviour
         // Is this move to be done front or back side?
         public bool OnFrontSide { get; set; }
 
-
+        // Modifications applied to the move
         public Modification[] Modifications { get; set; }
+
+        // Final instructions
+        public int Gear { get; set; }
+        public int Amount { get; set; }
+        public bool[] Pins { get; set; }
     }
 
     struct Modification
