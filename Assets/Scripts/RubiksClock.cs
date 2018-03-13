@@ -8,9 +8,7 @@ using System.Collections;
 
 /// <summary>
 /// @TODO:
-/// - Reset doesn't change internal clock hours??
 /// - Add custom sound to rotating gears.
-/// - Check direction on back clocks??
 /// </summary>
 public class RubiksClock : MonoBehaviour
 {
@@ -26,16 +24,14 @@ public class RubiksClock : MonoBehaviour
     // 0 1
     // 2 3
     private bool[] _pins = new bool[4];
-    private bool[] _scrambledPins = new bool[4];
 
     // Front:     Back:
     // 0  1  2    11 10 9
     // 3  4  5    14 13 12
     // 6  7  8    17 16 15
     private int[] _clocks = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    private int[] _scrambledClocks = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    private Quaternion _targetRotation;
+    private bool _onFrontSide = true;
     private int[,,] _manualMoves = new int[4, 9, 4]
     {
         {
@@ -285,11 +281,8 @@ public class RubiksClock : MonoBehaviour
             Quantity = Bomb.GetIndicators().Count() + 1,
         });
 
-        // Init target rotation
-        _targetRotation = ClockPuzzle.transform.localRotation;
-
         // Scramble
-        Scramble(4);
+        Scramble(3);
         foreach (Move move in _moves)
         {
             Debug.LogFormat(
@@ -308,7 +301,8 @@ public class RubiksClock : MonoBehaviour
         // If the first move is on the back, turn over
         if (!_moves[0].OnFrontSide)
         {
-            TurnOver(true);
+            ClockPuzzle.transform.localEulerAngles = new Vector3(0, 0, 180);
+            _onFrontSide = false;
         }
 
         // This should light the pin and clock for the first move
@@ -437,7 +431,6 @@ public class RubiksClock : MonoBehaviour
 
             // Rotate inversed at scramble time
             RotateGear(gear, -amount);
-            move.ClocksAtStart = (int[])_clocks.Clone();
 
             // Initial pins to change
             var pin1 = _manualMoves[move.SmallSquare, move.BigSquare, 0];
@@ -473,12 +466,10 @@ public class RubiksClock : MonoBehaviour
             }
 
             // Add to scramble
+            move.ClocksAtStart = (int[])_clocks.Clone();
+            move.PinsAtStart = (bool[])_pins.Clone();
             _moves.Insert(0, move);
         }
-
-        // Save scrambled state for reset
-        _scrambledClocks = (int[])_clocks.Clone();
-        _scrambledPins = (bool[])_pins.Clone();
 
         _isScrambling = false;
     }
@@ -504,7 +495,6 @@ public class RubiksClock : MonoBehaviour
     // Called once per frame
     void Update()
     {
-        ClockPuzzle.transform.localRotation = Quaternion.Lerp(ClockPuzzle.transform.localRotation, _targetRotation, 4 * Time.deltaTime);
     }
 
     private void PressTurnOver()
@@ -515,10 +505,10 @@ public class RubiksClock : MonoBehaviour
         TurnOver();
     }
 
-    private void TurnOver(bool instant = false)
+    private void TurnOver()
     {
-        if (instant) ClockPuzzle.transform.Rotate(0, 0, 180);
-        _targetRotation *= Quaternion.AngleAxis(180, Vector3.forward);
+        _onFrontSide = !_onFrontSide;
+        _animationQueue.Enqueue(new TurnOverAnimation() { ToFrontSide = _onFrontSide });
     }
 
     private void PressReset()
@@ -535,10 +525,14 @@ public class RubiksClock : MonoBehaviour
         {
             _animationQueue.Enqueue(_resetStack.Pop());
         }
+        if (_moves[0].OnFrontSide != _onFrontSide)
+        {
+            _animationQueue.Enqueue(new TurnOverAnimation());
+        }
 
         // Reset to scrambled state
-        _clocks = (int[])_scrambledClocks.Clone();
-        _pins = (bool[])_scrambledPins.Clone();
+        _clocks = (int[])_moves[0].ClocksAtStart.Clone();
+        _pins = (bool[])_moves[0].PinsAtStart.Clone();
     }
 
     private void PressPin(int i)
@@ -549,11 +543,24 @@ public class RubiksClock : MonoBehaviour
     private void ChangePin(int i)
     {
         _pins[i] = !_pins[i];
-        Debug.LogFormat("Adding pin {0} to queue.", i);
         _animationQueue.Enqueue(new PinAnimation() { Pin = i, Position = _pins[i] });
+
+        // Record the steps so we can reset the pins later
         if (!_isScrambling)
         {
-            _resetStack.Push(new PinAnimation() { Pin = i, Position = !_pins[i] });
+            // If the previous step was changing the same pin, they cancel eachother out
+            if (
+                _resetStack.Count > 0
+                && _resetStack.Peek() is PinAnimation
+                && ((PinAnimation)_resetStack.Peek()).Pin == i
+            )
+            {
+                _resetStack.Pop();
+            }
+            else
+            {
+                _resetStack.Push(new PinAnimation() { Pin = i, Position = !_pins[i] });
+            }
         }
     }
 
@@ -693,9 +700,9 @@ public class RubiksClock : MonoBehaviour
         _animationQueue.Enqueue(new ClockAnimation() { HourChanges = hourChanges });
 
         // Record the steps so we can reset the clocks later
-        // If the previous step was a rotation on the same gear, merge it with this one
         if (!_isScrambling)
         {
+            // If the previous step was a rotation on the same gear, merge it with this one
             if (
                 _resetStack.Count > 0
                 && _resetStack.Peek() is ClockAnimation
@@ -730,7 +737,7 @@ public class RubiksClock : MonoBehaviour
         foreach (Move move in _moves)
         {
             // Light the pin and clock belonging to the move
-            if (_clocks.SequenceEqual(move.ClocksAtStart))
+            if (_clocks.SequenceEqual(move.ClocksAtStart) && _pins.SequenceEqual(move.PinsAtStart))
             {
                 LightPinAndClock(move);
                 break;
@@ -815,6 +822,26 @@ public class RubiksClock : MonoBehaviour
                     );
                 }
             }
+            else if (animation is TurnOverAnimation)
+            {
+                var turnOverAnimation = (TurnOverAnimation)animation;
+                var initialRotation = ClockPuzzle.transform.localEulerAngles;
+                var targetRotation = new Vector3(0, 0, turnOverAnimation.ToFrontSide ? 0 : 180);
+
+                var duration = 1f;
+                var elapsed = 0f;
+
+                while (elapsed < duration)
+                {
+                    yield return null;
+                    elapsed += Time.deltaTime;
+                    ClockPuzzle.transform.localEulerAngles = Vector3.Lerp(
+                        initialRotation,
+                        targetRotation,
+                        Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration)
+                    );
+                }
+            }
         }
     }
 
@@ -828,8 +855,9 @@ public class RubiksClock : MonoBehaviour
         public int BigSquare { get; set; }
         public int SmallSquare { get; set; }
 
-        // If the module clocks match these clocks, you arrived at this move, let's light the clock and pin
+        // If the module clocks and pins match these clocks and pins, you arrived at this move, let's light the clock and pin
         public int[] ClocksAtStart { get; set; }
+        public bool[] PinsAtStart { get; set; }
 
         // Is this move to be done front or back side?
         public bool OnFrontSide { get; set; }
@@ -874,5 +902,10 @@ public class RubiksClock : MonoBehaviour
     {
         public int Pin { get; set; }
         public bool Position { get; set; }
+    }
+
+    struct TurnOverAnimation : IAnimation
+    {
+        public bool ToFrontSide { get; set; }
     }
 }
