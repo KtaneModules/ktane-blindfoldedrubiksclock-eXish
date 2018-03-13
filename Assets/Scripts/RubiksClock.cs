@@ -302,7 +302,7 @@ public class RubiksClock : MonoBehaviour
         if (!_moves[0].OnFrontSide)
         {
             ClockPuzzle.transform.localEulerAngles = new Vector3(0, 0, 180);
-            _onFrontSide = false;
+            _onFrontSide = !_onFrontSide;
         }
 
         // This should light the pin and clock for the first move
@@ -698,6 +698,8 @@ public class RubiksClock : MonoBehaviour
 
         // Enqueue the animation
         _animationQueue.Enqueue(new ClockAnimation() { HourChanges = hourChanges });
+        //Debug.Log(String.Join(", ", new List<int>(hourChanges).ConvertAll(i => i.ToString()).ToArray()));
+        //Debug.Log(String.Join(", ", new List<int>(_clocks).ConvertAll(i => i.ToString()).ToArray()));
 
         // Record the steps so we can reset the clocks later
         if (!_isScrambling)
@@ -758,10 +760,6 @@ public class RubiksClock : MonoBehaviour
 
             if (animation is ClockAnimation)
             {
-                Debug.Log(string.Join(", ", _clocks.Select(x => x.ToString()).ToArray()));
-                GetComponent<KMAudio>().PlaySoundAtTransform("GearClick", transform);
-                GetComponent<KMSelectable>().AddInteractionPunch(.1f);
-
                 var clockAnimation = (ClockAnimation)animation;
                 var hourChanges = clockAnimation.HourChanges;
                 var initialRotations = new Vector3[hourChanges.Length];
@@ -771,31 +769,41 @@ public class RubiksClock : MonoBehaviour
                     initialRotations[i] = Clocks[i].transform.localEulerAngles;
                     targetRotations[i] = new Vector3(
                         Clocks[i].transform.localEulerAngles.x,
-                        Clocks[i].transform.localEulerAngles.y + hourChanges[i] * 30,
+                        Clocks[i].transform.localEulerAngles.y + hourChanges[i] * 30 * (i >= 9 ? -1 : 1),
                         Clocks[i].transform.localEulerAngles.z
                     );
                 }
 
-                var duration = .2f * clockAnimation.HourChanges.Max(i => Math.Abs(i));
+                var hoursToChange = clockAnimation.HourChanges.Max(i => Math.Abs(i));
+                var hoursPassed = 0;
+                var duration = .2f * hoursToChange;
                 var elapsed = 0f;
+                var smoothStep = 0f;
 
                 while (elapsed < duration)
                 {
                     yield return null;
                     elapsed += Time.deltaTime;
+                    smoothStep = Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration);
                     for (var i = 0; i < hourChanges.Length; i++)
                     {
                         Clocks[i].transform.localEulerAngles = Vector3.Lerp(
                             initialRotations[i],
                             targetRotations[i],
-                            Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration)
+                            smoothStep
                         );
+                    }
+                    if (smoothStep * hoursToChange > hoursPassed)
+                    {
+                        hoursPassed++;
+                        GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonRelease, transform);
+                        GetComponent<KMSelectable>().AddInteractionPunch(.1f);
                     }
                 }
             }
             else if (animation is PinAnimation)
             {
-                GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BigButtonPress, transform);
+                GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
                 GetComponent<KMSelectable>().AddInteractionPunch(.5f);
 
                 var pinAnimation = (PinAnimation)animation;
