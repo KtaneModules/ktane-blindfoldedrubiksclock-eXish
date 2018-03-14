@@ -34,3 +34,10 @@ div.footnotes::before {
 	left: 0;
 	top: 0;
 }
+span.ccw {
+	border-top: 1px solid black;
+	padding-top: .1rem;
+}
+h3 {
+	text-decoration: none;
+}

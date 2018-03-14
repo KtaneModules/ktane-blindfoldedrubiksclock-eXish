@@ -8,8 +8,8 @@ using System.Collections;
 
 /// <summary>
 /// @TODO:
-//2) Log all of the steps necessary to solve it.You currently do this, and I’m happy with it myself, but it’s possible some users will want to see the actual pins / rotations they need to make.If it had logged that, I would have found the above discrepancy faster.
-//3) Log all of the steps the user made, but preferably not as a long slew of individual log messages for every button press.In Rubik’s Cube and a few similar modules, I keep a list of all the moves the user made; then I output them all to the log(and clear the list) every time the user presses Reset, or the module is solved, or the bomb explodes.
+//3) Log all of the steps the user made, but preferably not as a long slew of individual log messages for every button press.
+// In Rubik’s Cube and a few similar modules, I keep a list of all the moves the user made; then I output them all to the log(and clear the list) every time the user presses Reset, or the module is solved, or the bomb explodes.
 /// </summary>
 public class RubiksClock : MonoBehaviour
 {
@@ -85,13 +85,16 @@ public class RubiksClock : MonoBehaviour
     private bool _isScrambling, _isResetting;
 
     // Convert pin index to the other side
-    private int[] _mirrorPin = new int[] { 1, 0, 3, 2 };
+    private int[] _mirror4 = new int[] { 1, 0, 3, 2 };
 
-    // Convert clock index to the other sc
-    private int[] _mirrorClock = new int[] { 2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9, 14, 13, 12, 17, 16, 15 };
+    // Convert clock index to the other side
+    private int[] _mirror9 = new int[] { 2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9, 14, 13, 12, 17, 16, 15 };
 
+    // Helpers for logging
     private int _moduleId;
     private static int _moduleIdCounter = 1;
+    private string[] _toDir4 = new string[] { "TL", "TR", "BL", "BR" };
+    private string[] _toDir9 = new string[] { "TL", "T", "TR", "L", "M", "R", "BL", "B", "BR" };
 
     // Called once at start
     void Start()
@@ -293,16 +296,24 @@ public class RubiksClock : MonoBehaviour
         foreach (Move move in _moves)
         {
             Debug.LogFormat(
-                "[Rubik's Clock #{0}] Lit clock: {1}. Lit pin: {2}. {3}, x = {4} = {5}. {6}, x = {7} = {8}. After 'Move' modifications; Big square: {9}, Small square: {10}. After all modifications; Change pins {11}, Rotate gear {12} for {13}.",
+                "[Rubik's Clock #{0}] Lit clock: {1}. Lit pin: {2}. "
+                + " {3}, {4} ({5}). {6}, {7} ({8})."
+                + " Big square: {9}, Small square: {10}."
+                + " Change pins {11}, Rotate gear {12} for {13}.",
                 _moduleId,
-                move.LitClock,
-                move.LitPin,
+                _toDir9[move.LitClock],
+                _toDir4[move.LitPin],
                 move.Modifications[0].Action.Description,
-                move.Modifications[0].Amount.Description,
                 move.Modifications[0].Amount.Quantity,
+                move.Modifications[0].Amount.Description,
                 move.Modifications[1].Action.Description,
+                move.Modifications[1].Amount.Quantity,
                 move.Modifications[1].Amount.Description,
-                move.Modifications[1].Amount.Quantity
+                _toDir9[move.BigSquare],
+                _toDir4[move.SmallSquare],
+                String.Join(" and ", move.Pins.ConvertAll(i => _toDir4[i]).ToArray()),
+                _toDir4[move.Gear],
+                move.Amount
             );
         }
 
@@ -429,12 +440,13 @@ public class RubiksClock : MonoBehaviour
                         : -modification.Amount.Quantity;
                 }
             }
+            move.Gear = gear;
             move.Amount = amount;
 
             // Invert rotation if on back side
             if (!move.OnFrontSide)
             {
-                gear = _mirrorPin[gear];
+                gear = _mirror4[gear];
                 amount = -amount;
             }
 
@@ -446,8 +458,8 @@ public class RubiksClock : MonoBehaviour
             var pin2 = _manualMoves[move.SmallSquare, move.BigSquare, 1];
             if (!move.OnFrontSide)
             {
-                pin1 = _mirrorPin[pin1];
-                pin2 = _mirrorPin[pin2];
+                pin1 = _mirror4[pin1];
+                pin2 = _mirror4[pin2];
             }
             var changePins = new bool[4];
             changePins[pin1] = true;
@@ -469,11 +481,15 @@ public class RubiksClock : MonoBehaviour
             }
 
             // Change pins
+            move.Pins = new List<int>();
             for (var i = 0; i < 4; i++)
             {
-                if (changePins[i]) ChangePin(i);
+                if (changePins[i])
+                {
+                    ChangePin(i);
+                    move.Pins.Add(move.OnFrontSide ? i : _mirror4[i]);
+                }
             }
-            move.Pins = changePins;
 
             // Add to scramble
             move.ClocksAtStart = (int[])_clocks.Clone();
@@ -486,9 +502,9 @@ public class RubiksClock : MonoBehaviour
 
     private void LightPinAndClock(Move move)
     {
-        var litPin = move.OnFrontSide ? move.LitPin : _mirrorPin[move.LitPin];
-        var litClockFront = move.OnFrontSide ? move.LitClock : _mirrorClock[move.LitClock];
-        var litClockBack = move.OnFrontSide ? (move.LitClock + 9) : (_mirrorClock[move.LitClock] + 9);
+        var litPin = move.OnFrontSide ? move.LitPin : _mirror4[move.LitPin];
+        var litClockFront = move.OnFrontSide ? move.LitClock : _mirror9[move.LitClock];
+        var litClockBack = move.OnFrontSide ? (move.LitClock + 9) : (_mirror9[move.LitClock] + 9);
 
         for (var i = 0; i < Pins.Length; i++)
         {
@@ -540,9 +556,11 @@ public class RubiksClock : MonoBehaviour
             _animationQueue.Enqueue(new TurnOverAnimation());
         }
 
-        // Reset to scrambled state
+        // Reset to initial scrambled state
         _clocks = (int[])_moves[0].ClocksAtStart.Clone();
         _pins = (bool[])_moves[0].PinsAtStart.Clone();
+        _onFrontSide = _moves[0].OnFrontSide;
+        LightPinAndClock(_moves[0]);
     }
 
     private void PressPin(int i)
@@ -708,8 +726,6 @@ public class RubiksClock : MonoBehaviour
 
         // Enqueue the animation
         _animationQueue.Enqueue(new ClockAnimation() { HourChanges = hourChanges });
-        //Debug.Log(String.Join(", ", new List<int>(hourChanges).ConvertAll(i => i.ToString()).ToArray()));
-        //Debug.Log(String.Join(", ", new List<int>(_clocks).ConvertAll(i => i.ToString()).ToArray()));
 
         // Record the steps so we can reset the clocks later
         if (!_isScrambling)
@@ -731,7 +747,6 @@ public class RubiksClock : MonoBehaviour
             else
             {
                 _resetStack.Push(new ClockAnimation() { HourChanges = hourChanges.Select(i => -i).ToArray(), Gear = gear });
-
             }
         }
     }
@@ -814,7 +829,7 @@ public class RubiksClock : MonoBehaviour
             else if (animation is PinAnimation)
             {
                 GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
-                GetComponent<KMSelectable>().AddInteractionPunch(.5f);
+                GetComponent<KMSelectable>().AddInteractionPunch(.3f);
 
                 var pinAnimation = (PinAnimation)animation;
                 var pin = pinAnimation.Pin;
@@ -864,16 +879,20 @@ public class RubiksClock : MonoBehaviour
                         targetRotation,
                         Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration)
                     );
-/*                    ClockPuzzle.transform.localPosition = Vector3.Lerp(
+                    ClockPuzzle.transform.localPosition = Vector3.Lerp(
                         initialPosition,
                         targetPosition,
                         Mathf.SmoothStep(0.0f, 1.0f, elapsed < (duration / 2) ? (elapsed / duration * 2) : (elapsed / duration * -2 + 2))
                     );
- */               }
+                }
             }
         }
     }
 
+    /**
+     * A move that should be performed on the module in order to solve it.
+     * Includes the lit clock and pin, two modifications and the final instructions to follow.
+     */
     struct Move
     {
         // Lit clock and pin for initial instruction cell
@@ -897,7 +916,7 @@ public class RubiksClock : MonoBehaviour
         // Final instructions
         public int Gear { get; set; }
         public int Amount { get; set; }
-        public bool[] Pins { get; set; }
+        public List<int> Pins { get; set; }
     }
 
     struct Modification
