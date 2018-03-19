@@ -17,6 +17,9 @@ public class RubiksClock : MonoBehaviour
     public KMSelectable TurnOverButton;
     public KMSelectable ResetButton;
 
+    public string TwitchHelpMessage = "To change a pin: “p {direction}”. To rotate a gear: “r {direction} {amount}”. Directions are “tl”, “tr”, “bl”, “br” (from top left to bottom right)."
+        + "Perform several commands with e.g. “!{0} p tl, r br -5”.";
+
     // Front:
     // 0 1
     // 2 3
@@ -965,8 +968,6 @@ public class RubiksClock : MonoBehaviour
         }
     }
 
-    /*public string TwitchHelpMessage = "Commands are “O”, “I”, “screw” and “unscrew”. Perform several commands with e.g. !{0} O, unscrew, I, screw.";
-
     IEnumerator ProcessTwitchCommand(string commands)
     {
         var directions = new string[] { "tl", "tr", "bl", "br" };
@@ -979,7 +980,6 @@ public class RubiksClock : MonoBehaviour
             switch (parts[0])
             {
                 case "r":
-                case "rotate":
                     int amount;
                     if (parts.Length != 3 || !directions.Contains(parts[1]) || !int.TryParse(parts[2], out amount))
                     {
@@ -987,49 +987,49 @@ public class RubiksClock : MonoBehaviour
                     }
                     actions.Add(() =>
                     {
-                        https://github.com/samfun123/KtaneTwitchPlays/wiki/External-Mod-Module-Support
-                        ButtonO.OnInteract();
-                        return .1f;
+                        var index = Array.FindIndex(directions, row => row == parts[1]);
+                        // @todo: if you rotate too far, it will probably not detect a solve
+                        RotateGear(_onFrontSide ? index : _mirror4[index], _onFrontSide ? amount : -amount);
+                        CheckState();
+                        if (_isSolved) return "solve";
+                        return 0f;
                     });
                     break;
 
-                case "i":
-                case "1":
-                case "press i":
-                case "press 1":
+                case "p":
+                    if (parts.Length != 2 || !directions.Contains(parts[1]))
+                    {
+                        yield break;
+                    }
                     actions.Add(() =>
                     {
-                        ButtonI.OnInteract();
-                        return .1f;
+                        var index = Array.FindIndex(directions, row => row == parts[1]);
+                        ChangePin(_onFrontSide ? index : _mirror4[index]);
+                        return 0f;
                     });
                     break;
-
-                case "screw":
-                case "screw in":
-                case "screw it in":
-                case "screwin":
-                case "screwitin":
+                case "t":
+                    if (parts.Length != 1)
+                    {
+                        yield break;
+                    }
                     actions.Add(() =>
                     {
-                        if (!_isBulbUnscrewed)
-                            return null;
-                        Bulb.OnInteract();
-                        if (_stage == 0)
-                            return "solve";
-                        return "";
+                        PressTurnOver();
+                        return 0f;
                     });
                     break;
-
-                case "unscrew":
+                case "reset":
+                    if (parts.Length != 1)
+                    {
+                        yield break;
+                    }
                     actions.Add(() =>
                     {
-                        if (_isBulbUnscrewed)
-                            return null;
-                        Bulb.OnInteract();
-                        return "";
+                        PressReset();
+                        return 0f;
                     });
                     break;
-
                 default:
                     yield break;
             }
@@ -1043,18 +1043,10 @@ public class RubiksClock : MonoBehaviour
             else if (result is float)
                 yield return new WaitForSeconds((float)result);
             else if (result is string)
-            {
-                if (!result.Equals(""))
-                    yield return result;
-                while (_isScrewing)
-                {
-                    yield return "trycancel";
-                    yield return new WaitForSeconds(.1f);
-                }
-            }
+                yield return result;
         }
-    }*/
-    
+    }
+
     /**
      * A move that should be performed on the module in order to solve it.
      * Includes the lit clock and pin, two modifications and the final instructions to follow.
