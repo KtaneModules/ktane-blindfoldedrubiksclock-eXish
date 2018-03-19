@@ -17,8 +17,8 @@ public class RubiksClock : MonoBehaviour
     public KMSelectable TurnOverButton;
     public KMSelectable ResetButton;
 
-    public string TwitchHelpMessage = "To change a pin: “p {direction}”. To rotate a gear: “r {direction} {amount}”. Directions are “tl”, “tr”, “bl”, “br” (from top left to bottom right)."
-        + "Perform several commands with e.g. “!{0} p tl, r br -5”.";
+    public string TwitchHelpMessage = "“{direction}” to change a pin, “{direction} {amount}” to rotate a gear, “t” to turn over Clock, “r” to reset. Directions are “tl”, “tr”, “bl”, “br” (from top left to bottom right)."
+        + "Perform several commands with e.g. “!{0} tl, br -5, t”.";
 
     // Front:
     // 0 1
@@ -972,66 +972,58 @@ public class RubiksClock : MonoBehaviour
     {
         var directions = new string[] { "tl", "tr", "bl", "br" };
         var actions = new List<Func<object>>();
+        int amount;
 
         foreach (var command in commands.ToLowerInvariant().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = command.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            switch (parts[0])
+            // {direction} {amount} = rotate gear
+            if (parts.Length == 2 && directions.Contains(parts[0]) && int.TryParse(parts[1], out amount))
             {
-                case "r":
-                    int amount;
-                    if (parts.Length != 3 || !directions.Contains(parts[1]) || !int.TryParse(parts[2], out amount))
-                    {
-                        yield break;
-                    }
-                    actions.Add(() =>
-                    {
-                        var index = Array.FindIndex(directions, row => row == parts[1]);
-                        // @todo: if you rotate too far, it will probably not detect a solve
-                        RotateGear(_onFrontSide ? index : _mirror4[index], _onFrontSide ? amount : -amount);
-                        CheckState();
-                        if (_isSolved) return "solve";
-                        return 0f;
-                    });
-                    break;
+                actions.Add(() =>
+                {
+                    var index = Array.FindIndex(directions, row => row == parts[0]);
+                    RotateGear(_onFrontSide ? index : _mirror4[index], _onFrontSide ? amount : -amount);
+                    CheckState();
+                    if (_isSolved) return "solve";
+                    return 0f;
+                });
+            }
 
-                case "p":
-                    if (parts.Length != 2 || !directions.Contains(parts[1]))
-                    {
-                        yield break;
-                    }
-                    actions.Add(() =>
-                    {
-                        var index = Array.FindIndex(directions, row => row == parts[1]);
-                        ChangePin(_onFrontSide ? index : _mirror4[index]);
-                        return 0f;
-                    });
-                    break;
-                case "t":
-                    if (parts.Length != 1)
-                    {
-                        yield break;
-                    }
-                    actions.Add(() =>
-                    {
-                        PressTurnOver();
-                        return 0f;
-                    });
-                    break;
-                case "reset":
-                    if (parts.Length != 1)
-                    {
-                        yield break;
-                    }
-                    actions.Add(() =>
-                    {
-                        PressReset();
-                        return 0f;
-                    });
-                    break;
-                default:
-                    yield break;
+            // {direction} = change pin
+            else if (parts.Length == 1 && directions.Contains(parts[0]))
+            {
+                actions.Add(() =>
+                {
+                    var index = Array.FindIndex(directions, row => row == parts[0]);
+                    ChangePin(_onFrontSide ? index : _mirror4[index]);
+                    return 0f;
+                });
+            }
+
+            // t = turn over
+            else if (parts.Length == 1 && parts[0] == "t")
+            {
+                actions.Add(() =>
+                {
+                    PressTurnOver();
+                    return 0f;
+                });
+            }
+
+            // r = reset
+            else if (parts.Length == 1 && parts[0] == "r")
+            {
+                actions.Add(() =>
+                {
+                    PressReset();
+                    return 0f;
+                });
+            }
+            else
+            {
+                yield break;
             }
         }
 
