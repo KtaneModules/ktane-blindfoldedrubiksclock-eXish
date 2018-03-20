@@ -13,17 +13,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: RubiksClock
   title: Rubik's Clock
-  description: 'Rubik''s Clock v1.0
-
-
-    Module ID: RubiksClock
-
-
-    Created by Groover#1027
-
-    Special thanks to ashthebash#1367 and Timwi#0551
-
-    (find us on Discord:KTANE)'
+  description: "Rubik's Clock v1.1\n\r\nManual: https://ktane.timwi.de/HTML/Rubik%E2%80%99s%20Clock.html\r\n\r\nModule
+    ID: rubiksClock\r\n\r\nCreated by Groover#1027\r\nSpecial thanks to ashthebash#1367
+    and Timwi#0551\r\n(find us on Discord:KTANE)"
   version: 1.0
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 263f07fe2fd5f3540a52805debada7f4, type: 3}

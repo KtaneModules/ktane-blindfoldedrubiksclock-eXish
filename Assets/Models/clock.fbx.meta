@@ -1,0 +1,224 @@
+fileFormatVersion: 2
+guid: 21acf7d38c1140d4eba0779beee202e3
+timeCreated: 1521502106
+licenseType: Free
+ModelImporter:
+  serializedVersion: 21
+  fileIDToRecycleName:
+    100000: Base
+    100002: //RootNode
+    100004: Gear1
+    100006: Gear2
+    100008: Gear3
+    100010: Gear4
+    100012: Needle1
+    100014: Needle10
+    100016: Needle11
+    100018: Needle12
+    100020: Needle13
+    100022: Needle14
+    100024: Needle15
+    100026: Needle16
+    100028: Needle17
+    100030: Needle18
+    100032: Needle2
+    100034: Needle3
+    100036: Needle4
+    100038: Needle5
+    100040: Needle6
+    100042: Needle7
+    100044: Needle8
+    100046: Needle9
+    100048: Pin1
+    100050: Pin2
+    100052: Pin3
+    100054: Pin4
+    100056: Sockets
+    400000: Base
+    400002: //RootNode
+    400004: Gear1
+    400006: Gear2
+    400008: Gear3
+    400010: Gear4
+    400012: Needle1
+    400014: Needle10
+    400016: Needle11
+    400018: Needle12
+    400020: Needle13
+    400022: Needle14
+    400024: Needle15
+    400026: Needle16
+    400028: Needle17
+    400030: Needle18
+    400032: Needle2
+    400034: Needle3
+    400036: Needle4
+    400038: Needle5
+    400040: Needle6
+    400042: Needle7
+    400044: Needle8
+    400046: Needle9
+    400048: Pin1
+    400050: Pin2
+    400052: Pin3
+    400054: Pin4
+    400056: Sockets
+    2300000: Base
+    2300002: Gear1
+    2300004: Gear2
+    2300006: Gear3
+    2300008: Gear4
+    2300010: Needle1
+    2300012: Needle10
+    2300014: Needle11
+    2300016: Needle12
+    2300018: Needle13
+    2300020: Needle14
+    2300022: Needle15
+    2300024: Needle16
+    2300026: Needle17
+    2300028: Needle18
+    2300030: Needle2
+    2300032: Needle3
+    2300034: Needle4
+    2300036: Needle5
+    2300038: Needle6
+    2300040: Needle7
+    2300042: Needle8
+    2300044: Needle9
+    2300046: Pin1
+    2300048: Pin2
+    2300050: Pin3
+    2300052: Pin4
+    2300054: Sockets
+    3300000: Base
+    3300002: Gear1
+    3300004: Gear2
+    3300006: Gear3
+    3300008: Gear4
+    3300010: Needle1
+    3300012: Needle10
+    3300014: Needle11
+    3300016: Needle12
+    3300018: Needle13
+    3300020: Needle14
+    3300022: Needle15
+    3300024: Needle16
+    3300026: Needle17
+    3300028: Needle18
+    3300030: Needle2
+    3300032: Needle3
+    3300034: Needle4
+    3300036: Needle5
+    3300038: Needle6
+    3300040: Needle7
+    3300042: Needle8
+    3300044: Needle9
+    3300046: Pin1
+    3300048: Pin2
+    3300050: Pin3
+    3300052: Pin4
+    3300054: Sockets
+    4300000: Gear3
+    4300002: Gear4
+    4300004: Gear2
+    4300006: Pin3
+    4300008: Pin4
+    4300010: Pin2
+    4300012: Needle12
+    4300014: Needle11
+    4300016: Needle10
+    4300018: Needle13
+    4300020: Needle14
+    4300022: Needle15
+    4300024: Needle18
+    4300026: Needle17
+    4300028: Needle16
+    4300030: Needle9
+    4300032: Needle8
+    4300034: Needle7
+    4300036: Needle4
+    4300038: Needle5
+    4300040: Needle6
+    4300042: Needle3
+    4300044: Needle2
+    4300046: Gear1
+    4300048: Base
+    4300050: Needle1
+    4300052: Sockets
+    4300054: Pin1
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
