@@ -18,9 +18,10 @@ public class RubiksClock : MonoBehaviour
     public KMSelectable ResetButton;
 
     public string TwitchHelpMessage =
-        "“[direction]” to change a pin, “[direction] [amount]” to rotate a gear, “t” to turn over Clock, “r” to reset."
-        + " Directions from top left to bottom right are “tl”, “tr”, “bl”, “br”."
-        + " Perform several commands with e.g. “!{0} tl, br -5, t”.";
+        "Change a pin with '!{0} tl'."
+        + "  Rotate a gear with '!{0} br 3'."
+        + "  Turn over clock with '!{0} turn' (or 't'), reset with '!{0} reset' (or 'r')."
+        + "  Commands can be combined with commas '!{0} tl, br -3, t'";
 
     // Front:
     // 0 1
@@ -1005,7 +1006,7 @@ public class RubiksClock : MonoBehaviour
             }
 
             // t = turn over
-            else if (parts.Length == 1 && parts[0] == "t")
+            else if (parts.Length == 1 && (parts[0] == "t" || parts[0] == "turn"))
             {
                 actions.Add(() =>
                 {
@@ -1015,7 +1016,7 @@ public class RubiksClock : MonoBehaviour
             }
 
             // r = reset
-            else if (parts.Length == 1 && parts[0] == "r")
+            else if (parts.Length == 1 && (parts[0] == "r" || parts[0] == "reset"))
             {
                 actions.Add(() =>
                 {
