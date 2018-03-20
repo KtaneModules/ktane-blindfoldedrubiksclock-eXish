@@ -17,8 +17,10 @@ public class RubiksClock : MonoBehaviour
     public KMSelectable TurnOverButton;
     public KMSelectable ResetButton;
 
-    public string TwitchHelpMessage = "“{direction}” to change a pin, “{direction} {amount}” to rotate a gear, “t” to turn over Clock, “r” to reset. Directions are “tl”, “tr”, “bl”, “br” (from top left to bottom right)."
-        + "Perform several commands with e.g. “!{0} tl, br -5, t”.";
+    public string TwitchHelpMessage =
+        "“[direction]” to change a pin, “[direction] [amount]” to rotate a gear, “t” to turn over Clock, “r” to reset."
+        + " Directions from top left to bottom right are “tl”, “tr”, “bl”, “br”."
+        + " Perform several commands with e.g. “!{0} tl, br -5, t”.";
 
     // Front:
     // 0 1
