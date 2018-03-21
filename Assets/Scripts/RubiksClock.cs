@@ -10,18 +10,13 @@ using System.Text.RegularExpressions;
 public class RubiksClock : MonoBehaviour
 {
     public KMBombInfo Bomb;
+    public GameObject[] Gears;
     public KMSelectable[] GearButtons;
     public GameObject ClockPuzzle;
     public KMSelectable[] Pins;
     public GameObject[] Clocks;
     public KMSelectable TurnOverButton;
     public KMSelectable ResetButton;
-
-    public string TwitchHelpMessage =
-        "Change a pin with '!{0} tl'."
-        + "  Rotate a gear with '!{0} br 3'."
-        + "  Turn over clock with '!{0} turn' (or 't'), reset with '!{0} reset' (or 'r')."
-        + "  Commands can be combined with commas '!{0} tl, br -3, t'";
 
     // Front:
     // 0 1
@@ -99,6 +94,12 @@ public class RubiksClock : MonoBehaviour
     private string[] _toDir4 = new string[] { "TL", "TR", "BL", "BR" };
     private string[] _toDir9 = new string[] { "TL", "T", "TR", "L", "M", "R", "BL", "B", "BR" };
 
+    private string TwitchHelpMessage =
+        "Change a pin with '!{0} tl'."
+        + "  Rotate a gear with '!{0} br 3'."
+        + "  Turn over clock with '!{0} turn' (or 't'), reset with '!{0} reset' (or 'r')."
+        + "  Commands can be combined with commas '!{0} tl, br -3, t'";
+
     // Called once at start
     void Start()
     {
@@ -119,7 +120,7 @@ public class RubiksClock : MonoBehaviour
         for (int i = 0; i < GearButtons.Length; i++)
         {
             var j = i;
-            GearButtons[i].OnInteract += delegate () { PressGear(j); return false; };
+            GearButtons[i].OnInteract += delegate () { PressGearButton(j); return false; };
         }
 
         // Pins
@@ -656,7 +657,7 @@ public class RubiksClock : MonoBehaviour
         }
     }
 
-    private void PressGear(int i)
+    private void PressGearButton(int i)
     {
         if (_isSolved) return;
 
@@ -665,6 +666,13 @@ public class RubiksClock : MonoBehaviour
 
         // -1=CCW, 1=CW
         var amount = (i % 2) * 2 - 1;
+
+        // Mirror if needed
+        if (!_onFrontSide)
+        {
+            gear = _mirror4[gear];
+            amount = -amount;
+        }
 
         RotateGear(gear, amount);
         CheckState();
@@ -788,7 +796,7 @@ public class RubiksClock : MonoBehaviour
         }
 
         // Enqueue the animation
-        _animationQueue.Enqueue(new GearAction() { HourChanges = hourChanges });
+        _animationQueue.Enqueue(new GearAction() { Gear = gear, Amount = amount, HourChanges = hourChanges });
 
         // Record the steps so we can reset the clocks later
         if (!_isScrambling && !_isResetting)
@@ -809,7 +817,7 @@ public class RubiksClock : MonoBehaviour
             }
             else
             {
-                _resetStack.Push(new GearAction() { HourChanges = hourChanges.Select(i => -i).ToArray(), Gear = gear });
+                _resetStack.Push(new GearAction() { Gear = gear, Amount = amount, HourChanges = hourChanges.Select(i => -i).ToArray() });
             }
 
             // Same for action log
@@ -869,8 +877,14 @@ public class RubiksClock : MonoBehaviour
             {
                 var gearAction = (GearAction)action;
                 var hourChanges = gearAction.HourChanges;
+                var initialGearRotation = Gears[gearAction.Gear].transform.localEulerAngles;
                 var initialRotations = new Vector3[hourChanges.Length];
                 var targetRotations = new Vector3[hourChanges.Length];
+                var targetGearRotation = new Vector3(
+                    Gears[gearAction.Gear].transform.localEulerAngles.x,
+                    Gears[gearAction.Gear].transform.localEulerAngles.y + gearAction.Amount * 30,
+                    Gears[gearAction.Gear].transform.localEulerAngles.z
+                );
                 for (var i = 0; i < hourChanges.Length; i++)
                 {
                     initialRotations[i] = Clocks[i].transform.localEulerAngles;
@@ -892,6 +906,11 @@ public class RubiksClock : MonoBehaviour
                     yield return null;
                     elapsed += Time.deltaTime;
                     smoothStep = Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration);
+                    Gears[gearAction.Gear].transform.localEulerAngles = Vector3.Lerp(
+                        initialGearRotation,
+                        targetGearRotation,
+                        smoothStep
+                    );
                     for (var i = 0; i < hourChanges.Length; i++)
                     {
                         Clocks[i].transform.localEulerAngles = Vector3.Lerp(
