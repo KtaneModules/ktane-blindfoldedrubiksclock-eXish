@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 public class RubiksClock : MonoBehaviour
 {
     public KMBombInfo Bomb;
+    public KMSelectable Module;
     public GameObject[] Gears;
     public KMSelectable[] GearButtons;
     public GameObject ClockPuzzle;
@@ -17,6 +18,14 @@ public class RubiksClock : MonoBehaviour
     public GameObject[] Clocks;
     public KMSelectable TurnOverButton;
     public KMSelectable ResetButton;
+    public string TwitchHelpMessage =
+        "Change a pin with '!{0} tl'."
+        + "  Rotate a gear with '!{0} br 3'."
+        + "  Turn over clock with '!{0} turn' (or 't'), reset with '!{0} reset' (or 'r')."
+        + "  Commands can be combined with commas '!{0} tl, br -3, t'";
+
+    private KMSelectable[] _gearButtonsFront;
+    private KMSelectable[] _gearButtonsBack;
 
     // Front:
     // 0 1
@@ -94,12 +103,6 @@ public class RubiksClock : MonoBehaviour
     private string[] _toDir4 = new string[] { "TL", "TR", "BL", "BR" };
     private string[] _toDir9 = new string[] { "TL", "T", "TR", "L", "M", "R", "BL", "B", "BR" };
 
-    private string TwitchHelpMessage =
-        "Change a pin with '!{0} tl'."
-        + "  Rotate a gear with '!{0} br 3'."
-        + "  Turn over clock with '!{0} turn' (or 't'), reset with '!{0} reset' (or 'r')."
-        + "  Commands can be combined with commas '!{0} tl, br -3, t'";
-
     // Called once at start
     void Start()
     {
@@ -122,6 +125,8 @@ public class RubiksClock : MonoBehaviour
             var j = i;
             GearButtons[i].OnInteract += delegate () { PressGearButton(j); return false; };
         }
+        _gearButtonsFront = new KMSelectable[] { GearButtons[0], GearButtons[2], GearButtons[4], GearButtons[6], GearButtons[8], GearButtons[10], GearButtons[12], GearButtons[14] };
+        _gearButtonsBack = new KMSelectable[] { GearButtons[1], GearButtons[3], GearButtons[5], GearButtons[7], GearButtons[9], GearButtons[11], GearButtons[13], GearButtons[15] };
 
         // Pins
         for (var i = 0; i < Pins.Length; i++)
@@ -332,7 +337,11 @@ public class RubiksClock : MonoBehaviour
         // If the first move is on the back, turn over
         if (!_moves[0].OnFrontSide)
         {
-            ClockPuzzle.transform.localEulerAngles = new Vector3(0, 0, 180);
+            ClockPuzzle.transform.localEulerAngles = new Vector3(
+                ClockPuzzle.transform.localEulerAngles.x,
+                ClockPuzzle.transform.localEulerAngles.y,
+                180
+            );
             _onFrontSide = !_onFrontSide;
         }
 
@@ -549,6 +558,8 @@ public class RubiksClock : MonoBehaviour
     {
         _onFrontSide = !_onFrontSide;
         _animationQueue.Enqueue(new TurnOverAction() { ToFrontSide = _onFrontSide });
+        Module.Children = _onFrontSide ? _gearButtonsFront : _gearButtonsBack;
+        Module.UpdateChildren();
 
         if (!_isScrambling && !_isResetting)
         {
@@ -662,10 +673,10 @@ public class RubiksClock : MonoBehaviour
         if (_isSolved) return;
 
         // 0=TL, 1=TR, 2=BL, 3=BR
-        var gear = i / 2;
+        var gear = i / 4;
 
         // -1=CCW, 1=CW
-        var amount = (i % 2) * 2 - 1;
+        var amount = (i / 2 % 2) * 2 - 1;
 
         // Mirror if needed
         if (!_onFrontSide)
@@ -960,7 +971,11 @@ public class RubiksClock : MonoBehaviour
             {
                 var turnOverAction = (TurnOverAction)action;
                 var initialRotation = ClockPuzzle.transform.localEulerAngles;
-                var targetRotation = new Vector3(0, 0, turnOverAction.ToFrontSide ? 0 : 180);
+                var targetRotation = new Vector3(
+                    ClockPuzzle.transform.localEulerAngles.x,
+                    ClockPuzzle.transform.localEulerAngles.y,
+                    turnOverAction.ToFrontSide ? 0 : 180
+                );
                 var initialPosition = ClockPuzzle.transform.localPosition;
                 var targetPosition = new Vector3(
                     ClockPuzzle.transform.localPosition.x,
