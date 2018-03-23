@@ -5,27 +5,29 @@ using UnityEngine;
 using Rnd = UnityEngine.Random;
 using KmHelper;
 using System.Collections;
-using System.Text.RegularExpressions;
 
 public class RubiksClock : MonoBehaviour
 {
     public KMBombInfo Bomb;
     public KMSelectable Module;
-    public GameObject[] Gears;
-    public KMSelectable[] GearButtons;
     public GameObject ClockPuzzle;
-    public KMSelectable[] Pins;
-    public GameObject[] Clocks;
     public KMSelectable TurnOverButton;
     public KMSelectable ResetButton;
+    public GameObject[] Gears;
+    public KMSelectable[] GearButtons;
+    public GameObject[] Pins;
+    public KMSelectable[] PinButtons;
+    public GameObject[] Clocks;
+    public Material UnlitMaterial;
+    public Material LitMaterial;
     public string TwitchHelpMessage =
         "Change a pin with '!{0} tl'."
         + "  Rotate a gear with '!{0} br 3'."
         + "  Turn over clock with '!{0} turn' (or 't'), reset with '!{0} reset' (or 'r')."
         + "  Commands can be combined with commas '!{0} tl, br -3, t'";
 
-    private KMSelectable[] _gearButtonsFront;
-    private KMSelectable[] _gearButtonsBack;
+    //private KMSelectable[] _selectablesFront;
+    //private KMSelectable[] _selectablesBack;
 
     // Front:
     // 0 1
@@ -125,14 +127,14 @@ public class RubiksClock : MonoBehaviour
             var j = i;
             GearButtons[i].OnInteract += delegate () { PressGearButton(j); return false; };
         }
-        _gearButtonsFront = new KMSelectable[] { GearButtons[0], GearButtons[2], GearButtons[4], GearButtons[6], GearButtons[8], GearButtons[10], GearButtons[12], GearButtons[14] };
-        _gearButtonsBack = new KMSelectable[] { GearButtons[1], GearButtons[3], GearButtons[5], GearButtons[7], GearButtons[9], GearButtons[11], GearButtons[13], GearButtons[15] };
+        //_selectablesFront = new KMSelectable[] { GearButtons[0], GearButtons[2], GearButtons[4], GearButtons[6], GearButtons[8], GearButtons[10], GearButtons[12], GearButtons[14] };
+        //_selectablesBack = new KMSelectable[] { GearButtons[1], GearButtons[3], GearButtons[5], GearButtons[7], GearButtons[9], GearButtons[11], GearButtons[13], GearButtons[15] };
 
-        // Pins
-        for (var i = 0; i < Pins.Length; i++)
+        // Pin buttons
+        for (var i = 0; i < PinButtons.Length; i++)
         {
             var j = i;
-            Pins[i].OnInteract += delegate () { PressPin(j); return false; };
+            PinButtons[i].OnInteract += delegate () { PressPinButton(j); return false; };
             _pins[i] = true;
         }
 
@@ -523,19 +525,30 @@ public class RubiksClock : MonoBehaviour
 
     private void LightPinAndClock(Move move)
     {
-        var litPin = move.OnFrontSide ? move.LitPin : _mirror4[move.LitPin];
-        var litClockFront = move.OnFrontSide ? move.LitClock : _mirror9[move.LitClock];
-        var litClockBack = move.OnFrontSide ? (move.LitClock + 9) : (_mirror9[move.LitClock] + 9);
+        var litPin = -1;
+        var litClockFront = -1;
+        var litClockBack = -1;
+        if (move.LitPin >= 0)
+        {
+            litPin = move.OnFrontSide ? move.LitPin : _mirror4[move.LitPin];
+            litClockFront = move.OnFrontSide ? move.LitClock : _mirror9[move.LitClock];
+            litClockBack = move.OnFrontSide ? (move.LitClock + 9) : (_mirror9[move.LitClock] + 9);
+        }
+        var lit = false;
 
         for (var i = 0; i < Pins.Length; i++)
         {
-            Pins[i].transform.Find("PinLightFront").GetComponent<Light>().enabled = (i == litPin);
-            Pins[i].transform.Find("PinLightBack").GetComponent<Light>().enabled = (i == litPin);
+            lit = (i == litPin);
+            Pins[i].transform.Find("LightFront").GetComponent<Light>().enabled = lit;
+            Pins[i].transform.Find("LightBack").GetComponent<Light>().enabled = lit;
+            Pins[i].GetComponent<Renderer>().material = (lit ? LitMaterial : UnlitMaterial);
         }
 
         for (var i = 0; i < Clocks.Length; i++)
         {
-            Clocks[i].transform.Find("ClockLight").GetComponent<Light>().enabled = (i == litClockFront || i == litClockBack);
+            lit = (i == litClockFront || i == litClockBack);
+            Clocks[i].transform.Find("Light").GetComponent<Light>().enabled = lit;
+            Clocks[i].GetComponent<Renderer>().material = (lit ? LitMaterial : UnlitMaterial);
         }
     }
 
@@ -558,8 +571,8 @@ public class RubiksClock : MonoBehaviour
     {
         _onFrontSide = !_onFrontSide;
         _animationQueue.Enqueue(new TurnOverAction() { ToFrontSide = _onFrontSide });
-        Module.Children = _onFrontSide ? _gearButtonsFront : _gearButtonsBack;
-        Module.UpdateChildren();
+        //Module.Children = _onFrontSide ? _selectablesFront : _selectablesBack;
+        //Module.UpdateChildren();
 
         if (!_isScrambling && !_isResetting)
         {
@@ -635,11 +648,11 @@ public class RubiksClock : MonoBehaviour
         return String.Join(" ", msgs.ToArray());
     }
 
-    private void PressPin(int i)
+    private void PressPinButton(int i)
     {
         if (_isSolved) return;
 
-        ChangePin(i);
+        ChangePin(_onFrontSide ? i : _mirror4[i]);
     }
 
     private void ChangePin(int i)
@@ -673,10 +686,10 @@ public class RubiksClock : MonoBehaviour
         if (_isSolved) return;
 
         // 0=TL, 1=TR, 2=BL, 3=BR
-        var gear = i / 4;
+        var gear = i / 2;
 
         // -1=CCW, 1=CW
-        var amount = (i / 2 % 2) * 2 - 1;
+        var amount = (i % 2) * 2 - 1;
 
         // Mirror if needed
         if (!_onFrontSide)
@@ -857,6 +870,7 @@ public class RubiksClock : MonoBehaviour
         {
             // The module is solved
             _isSolved = true;
+            LightPinAndClock(new Move(){ LitClock = -1, LitPin = -1 });
             Debug.LogFormat("[Rubik's Clock #{0}] Actions performed to solve: {1}", _moduleId, FormatActions());
             GetComponent<KMBombModule>().HandlePass();
         }
@@ -888,14 +902,8 @@ public class RubiksClock : MonoBehaviour
             {
                 var gearAction = (GearAction)action;
                 var hourChanges = gearAction.HourChanges;
-                var initialGearRotation = Gears[gearAction.Gear].transform.localEulerAngles;
                 var initialRotations = new Vector3[hourChanges.Length];
                 var targetRotations = new Vector3[hourChanges.Length];
-                var targetGearRotation = new Vector3(
-                    Gears[gearAction.Gear].transform.localEulerAngles.x,
-                    Gears[gearAction.Gear].transform.localEulerAngles.y + gearAction.Amount * 30,
-                    Gears[gearAction.Gear].transform.localEulerAngles.z
-                );
                 for (var i = 0; i < hourChanges.Length; i++)
                 {
                     initialRotations[i] = Clocks[i].transform.localEulerAngles;
@@ -917,11 +925,6 @@ public class RubiksClock : MonoBehaviour
                     yield return null;
                     elapsed += Time.deltaTime;
                     smoothStep = Mathf.SmoothStep(0.0f, 1.0f, elapsed / duration);
-                    Gears[gearAction.Gear].transform.localEulerAngles = Vector3.Lerp(
-                        initialGearRotation,
-                        targetGearRotation,
-                        smoothStep
-                    );
                     for (var i = 0; i < hourChanges.Length; i++)
                     {
                         Clocks[i].transform.localEulerAngles = Vector3.Lerp(
@@ -949,7 +952,7 @@ public class RubiksClock : MonoBehaviour
                 var initialPosition = Pins[pin].transform.localPosition;
                 var targetPosition = new Vector3(
                     Pins[pin].transform.localPosition.x,
-                    (position ? .7f : -.7f),
+                    (position ? .25f : -.25f),
                     Pins[pin].transform.localPosition.z
                 );
 
