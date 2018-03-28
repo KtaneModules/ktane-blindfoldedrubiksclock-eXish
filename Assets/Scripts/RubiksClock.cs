@@ -22,12 +22,9 @@ public class RubiksClock : MonoBehaviour
     public Material LitMaterial;
     public string TwitchHelpMessage =
         "Change a pin with '!{0} tl'."
-        + "  Rotate a gear with '!{0} br 3'."
-        + "  Turn over clock with '!{0} turn' (or 't'), reset with '!{0} reset' (or 'r')."
-        + "  Commands can be combined with commas '!{0} tl, br -3, t'";
-
-    //private KMSelectable[] _selectablesFront;
-    //private KMSelectable[] _selectablesBack;
+        + "  Rotate a gear with '!{0} br -3'."
+        + "  Turn over clock with '!{0} t' (or 'turn'), reset with '!{0} r' (or 'reset')."
+        + "  Commands can be combined with commas '!{0} tl, tr, br -3, t'";
 
     // Front:
     // 0 1
@@ -110,25 +107,12 @@ public class RubiksClock : MonoBehaviour
     {
         _moduleId = _moduleIdCounter++;
 
-        Debug.LogFormat(
-            "[Rubik's Clock #{0}] Serial={1} AA={2} D={3} Lit={4} Unlit={5} Ports={6}",
-            _moduleId,
-            Bomb.GetSerialNumber(),
-            Bomb.GetBatteryCount(Battery.AA),
-            Bomb.GetBatteryCount(Battery.D),
-            Bomb.GetOnIndicators().Count(),
-            Bomb.GetOffIndicators().Count(),
-            Bomb.GetPortCount()
-        );
-
         // Gear buttons
         for (int i = 0; i < GearButtons.Length; i++)
         {
             var j = i;
             GearButtons[i].OnInteract += delegate () { PressGearButton(j); return false; };
         }
-        //_selectablesFront = new KMSelectable[] { GearButtons[0], GearButtons[2], GearButtons[4], GearButtons[6], GearButtons[8], GearButtons[10], GearButtons[12], GearButtons[14] };
-        //_selectablesBack = new KMSelectable[] { GearButtons[1], GearButtons[3], GearButtons[5], GearButtons[7], GearButtons[9], GearButtons[11], GearButtons[13], GearButtons[15] };
 
         // Pin buttons
         for (var i = 0; i < PinButtons.Length; i++)
@@ -148,7 +132,7 @@ public class RubiksClock : MonoBehaviour
         {
             if (!_isSolved && _actionLog.Count > 0)
             {
-                Debug.LogFormat("[Rubik's Clock #{0}] Actions performed before bomb exploded: {1}", _moduleId, FormatActions());
+                Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed before bomb exploded: {1}", _moduleId, FormatActions());
             }
         };
 
@@ -312,14 +296,17 @@ public class RubiksClock : MonoBehaviour
 
         // Scramble
         Scramble(3);
-        foreach (Move move in _moves)
+        for (int count = 0; count < _moves.Count; count++)
         {
+            var move = _moves[count];
             Debug.LogFormat(
-                "[Rubik's Clock #{0}] Lit clock: {1}. Lit pin: {2}. "
-                + " {3}, {4} ({5}). {6}, {7} ({8})."
-                + " Big square: {9}, Small square: {10}."
-                + " Change pins {11}, Rotate gear {12} for {13}.",
+                "[Rubik’s Clock #{0}] Moves to solve, move {1}:\n"
+                + "Lit clock: {2}. Lit pin: {3}.\n"
+                + "{4}, {5} ({6}). {7}, {8} ({9}).\n"
+                + "Big square: {10}, Small square: {11}.\n"
+                + "Change pins {12}, Rotate gear {13} for {14}.\n",
                 _moduleId,
+                count + 1,
                 _toDir9[move.LitClock],
                 _toDir4[move.LitPin],
                 move.Modifications[0].Action.Description,
@@ -369,7 +356,7 @@ public class RubiksClock : MonoBehaviour
         var firstModificationAction2 = (Char.IsDigit(sn[2]) ? (int)sn[2] - 22 : (int)sn[2] - 65) / 3;
         var firstModificationAmount2 = (Char.IsDigit(sn[3]) ? (int)sn[3] - 22 : (int)sn[3] - 65) / 3;
         Debug.LogFormat(
-            "[Rubik's Clock #{0}] Initial modifications: Action 1: row {1}. Amount 1: row {2}. Action 2: row {3}. Amount 2: row {4}",
+            "[Rubik’s Clock #{0}] Initial modifications: Action 1: row {1}. Amount 1: row {2}. Action 2: row {3}. Amount 2: row {4}",
             _moduleId, firstModificationAction1 + 1, firstModificationAmount1 + 1, firstModificationAction2 + 1, firstModificationAmount2 + 1
         );
 
@@ -379,15 +366,22 @@ public class RubiksClock : MonoBehaviour
             // Turn over
             onFrontSide = !onFrontSide;
 
-            // Random lit pin and clock
-            Move move = new Move()
-            {
-                LitPin = Rnd.Range(0, 4),
-                LitClock = Rnd.Range(0, 9),
-                OnFrontSide = onFrontSide,
+            int gear;
+            int amount;
+            Move move;
+            bool[] changePins;
 
-                // Determine modifications
-                Modifications = new Modification[] {
+            do
+            {
+                // Random lit pin and clock
+                move = new Move()
+                {
+                    LitPin = Rnd.Range(0, 4),
+                    LitClock = Rnd.Range(0, 9),
+                    OnFrontSide = onFrontSide,
+
+                    // Determine modifications
+                    Modifications = new Modification[] {
                     new Modification() {
                         Action = _manualModActions[(firstModificationAction1 + numMoves - 1 - curMove) % 12],
                         Amount = _manualModAmounts[(firstModificationAmount1 + numMoves - 1 - curMove) % 12],
@@ -397,111 +391,113 @@ public class RubiksClock : MonoBehaviour
                         Amount = _manualModAmounts[(firstModificationAmount2 + numMoves - 1 - curMove) % 12],
                     }
                 },
-            };
+                };
 
-            // Apply "move" modifications
-            move.BigSquare = move.LitClock;
-            move.SmallSquare = move.LitPin;
-            foreach (Modification modification in move.Modifications)
-            {
-                if (
-                    modification.Action.MainType == ModificationAction.MainTypeEnum.MoveBig ||
-                    modification.Action.MainType == ModificationAction.MainTypeEnum.MoveSmall
-                )
+                // Apply "move" modifications
+                move.BigSquare = move.LitClock;
+                move.SmallSquare = move.LitPin;
+                foreach (Modification modification in move.Modifications)
                 {
-                    // Convert big and small to 0-5 by 0-5 coordinate for easier movement
-                    var col = (move.BigSquare % 3) * 2 + (move.SmallSquare % 2);
-                    var row = (move.BigSquare / 3) * 2 + (move.SmallSquare / 2);
-                    var step = (modification.Action.MainType == ModificationAction.MainTypeEnum.MoveBig ? 2 : 1);
-
-                    // Apply move
-                    switch (modification.Action.Direction)
+                    if (
+                        modification.Action.MainType == ModificationAction.MainTypeEnum.MoveBig ||
+                        modification.Action.MainType == ModificationAction.MainTypeEnum.MoveSmall
+                    )
                     {
-                        case ModificationAction.DirectionEnum.Up:
-                            row = (row + (6 - step) * modification.Amount.Quantity) % 6;
-                            break;
-                        case ModificationAction.DirectionEnum.Down:
-                            row = (row + step * modification.Amount.Quantity) % 6;
-                            break;
-                        case ModificationAction.DirectionEnum.Left:
-                            col = (col + (6 - step) * modification.Amount.Quantity) % 6;
-                            break;
-                        case ModificationAction.DirectionEnum.Right:
-                            col = (col + step * modification.Amount.Quantity) % 6;
-                            break;
+                        // Convert big and small to 0-5 by 0-5 coordinate for easier movement
+                        var col = (move.BigSquare % 3) * 2 + (move.SmallSquare % 2);
+                        var row = (move.BigSquare / 3) * 2 + (move.SmallSquare / 2);
+                        var step = (modification.Action.MainType == ModificationAction.MainTypeEnum.MoveBig ? 2 : 1);
+
+                        // Apply move
+                        switch (modification.Action.Direction)
+                        {
+                            case ModificationAction.DirectionEnum.Up:
+                                row = (row + (6 - step) * modification.Amount.Quantity) % 6;
+                                break;
+                            case ModificationAction.DirectionEnum.Down:
+                                row = (row + step * modification.Amount.Quantity) % 6;
+                                break;
+                            case ModificationAction.DirectionEnum.Left:
+                                col = (col + (6 - step) * modification.Amount.Quantity) % 6;
+                                break;
+                            case ModificationAction.DirectionEnum.Right:
+                                col = (col + step * modification.Amount.Quantity) % 6;
+                                break;
+                        }
+
+                        // And convert back
+                        move.BigSquare = (row / 2 * 3) + (col / 2);
+                        move.SmallSquare = (row % 2 * 2) + (col % 2);
                     }
-
-                    // And convert back
-                    move.BigSquare = (row / 2 * 3) + (col / 2);
-                    move.SmallSquare = (row % 2 * 2) + (col % 2);
                 }
-            }
 
-            // Initial rotation
-            var gear = _manualMoves[move.SmallSquare, move.BigSquare, 2];
-            var amount = _manualMoves[move.SmallSquare, move.BigSquare, 3];
+                // Initial rotation
+                gear = _manualMoves[move.SmallSquare, move.BigSquare, 2];
+                amount = _manualMoves[move.SmallSquare, move.BigSquare, 3];
 
-            // Apply "rotate" modifications
-            foreach (Modification modification in move.Modifications)
-            {
-                if (
-                    modification.Action.MainType == ModificationAction.MainTypeEnum.InvertRotation &&
-                    (modification.Amount.Quantity % 2 == 1)
-                )
+                // Apply "rotate" modifications
+                foreach (Modification modification in move.Modifications)
                 {
+                    if (
+                        modification.Action.MainType == ModificationAction.MainTypeEnum.InvertRotation &&
+                        (modification.Amount.Quantity % 2 == 1)
+                    )
+                    {
+                        amount = -amount;
+                    }
+                }
+
+                // Apply "add hours" modifications
+                foreach (Modification modification in move.Modifications)
+                {
+                    if (modification.Action.MainType == ModificationAction.MainTypeEnum.AddHours)
+                    {
+                        amount += (modification.Action.Direction == ModificationAction.DirectionEnum.Clockwise)
+                            ? modification.Amount.Quantity
+                            : -modification.Amount.Quantity;
+                    }
+                }
+                move.Gear = gear;
+                move.Amount = amount;
+
+                // Invert rotation if on back side
+                if (!move.OnFrontSide)
+                {
+                    gear = _mirror4[gear];
                     amount = -amount;
                 }
-            }
 
-            // Apply "add hours" modifications
-            foreach (Modification modification in move.Modifications)
-            {
-                if (modification.Action.MainType == ModificationAction.MainTypeEnum.AddHours)
+                // Initial pins to change
+                var pin1 = _manualMoves[move.SmallSquare, move.BigSquare, 0];
+                var pin2 = _manualMoves[move.SmallSquare, move.BigSquare, 1];
+                if (!move.OnFrontSide)
                 {
-                    amount += (modification.Action.Direction == ModificationAction.DirectionEnum.Clockwise)
-                        ? modification.Amount.Quantity
-                        : -modification.Amount.Quantity;
+                    pin1 = _mirror4[pin1];
+                    pin2 = _mirror4[pin2];
                 }
-            }
-            move.Gear = gear;
-            move.Amount = amount;
+                changePins = new bool[4];
+                changePins[pin1] = true;
+                changePins[pin2] = true;
 
-            // Invert rotation if on back side
-            if (!move.OnFrontSide)
-            {
-                gear = _mirror4[gear];
-                amount = -amount;
-            }
+                // Apply "change other pins" modifications
+                foreach (Modification modification in move.Modifications)
+                {
+                    if (
+                        modification.Action.MainType == ModificationAction.MainTypeEnum.OtherPins &&
+                        (modification.Amount.Quantity % 2 == 0)
+                    )
+                    {
+                        for (var i = 0; i < changePins.Length; i++)
+                        {
+                            changePins[i] = !changePins[i];
+                        }
+                    }
+                }
+
+            } while (amount == 0);
 
             // Rotate inversed at scramble time
             RotateGear(gear, -amount);
-
-            // Initial pins to change
-            var pin1 = _manualMoves[move.SmallSquare, move.BigSquare, 0];
-            var pin2 = _manualMoves[move.SmallSquare, move.BigSquare, 1];
-            if (!move.OnFrontSide)
-            {
-                pin1 = _mirror4[pin1];
-                pin2 = _mirror4[pin2];
-            }
-            var changePins = new bool[4];
-            changePins[pin1] = true;
-            changePins[pin2] = true;
-
-            // Apply "change other pins" modifications
-            foreach (Modification modification in move.Modifications)
-            {
-                if (
-                    modification.Action.MainType == ModificationAction.MainTypeEnum.OtherPins &&
-                    (modification.Amount.Quantity % 2 == 0)
-                )
-                {
-                    for (var i = 0; i < changePins.Length; i++)
-                    {
-                        changePins[i] = !changePins[i];
-                    }
-                }
-            }
 
             // Change pins
             move.Pins = new List<int>();
@@ -596,7 +592,7 @@ public class RubiksClock : MonoBehaviour
         _isResetting = true;
 
         // Log actions and clean action log
-        Debug.LogFormat("[Rubik's Clock #{0}] Actions performed before reset: {1}", _moduleId, FormatActions());
+        Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed before reset: {1}", _moduleId, FormatActions());
         _actionLog = new List<IAction>();
 
         // Pour reset stack into animation queue
@@ -645,7 +641,7 @@ public class RubiksClock : MonoBehaviour
                 msgs.Add("Turn over to the " + (turnOverAction.ToFrontSide ? "front" : "back") + " side.");
             }
         }
-        return String.Join(" ", msgs.ToArray());
+        return String.Join("\n", msgs.ToArray());
     }
 
     private void PressPinButton(int i)
@@ -870,8 +866,8 @@ public class RubiksClock : MonoBehaviour
         {
             // The module is solved
             _isSolved = true;
-            LightPinAndClock(new Move(){ LitClock = -1, LitPin = -1 });
-            Debug.LogFormat("[Rubik's Clock #{0}] Actions performed to solve: {1}", _moduleId, FormatActions());
+            LightPinAndClock(new Move() { LitClock = -1, LitPin = -1 });
+            Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed to solve: {1}", _moduleId, FormatActions());
             GetComponent<KMBombModule>().HandlePass();
         }
 
@@ -1012,10 +1008,10 @@ public class RubiksClock : MonoBehaviour
     {
         var directions = new string[] { "tl", "tr", "bl", "br" };
         var actions = new List<Func<object>>();
-        int amount;
 
         foreach (var command in commands.ToLowerInvariant().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
         {
+            int amount;
             var parts = command.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             // {direction} {amount} = rotate gear

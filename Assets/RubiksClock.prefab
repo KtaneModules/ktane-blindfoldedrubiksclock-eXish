@@ -6919,7 +6919,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ModuleType: rubiksClock
-  ModuleDisplayName: Rubik's Clock
+  ModuleDisplayName: "Rubik\u2019s Clock"
   RequiresTimerVisibility: 0
 --- !u!114 &114586271778546242
 MonoBehaviour:
