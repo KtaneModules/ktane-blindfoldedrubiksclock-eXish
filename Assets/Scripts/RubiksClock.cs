@@ -299,24 +299,18 @@ public class RubiksClock : MonoBehaviour
         for (int count = 0; count < _moves.Count; count++)
         {
             var move = _moves[count];
-            Debug.LogFormat(
-                "[Rubik’s Clock #{0}] Moves to solve, move {1}:\n"
-                + "Lit clock: {2}. Lit pin: {3}.\n"
-                + "{4}, {5} ({6}). {7}, {8} ({9}).\n"
-                + "Big square: {10}, Small square: {11}.\n"
-                + "Change pins {12}, Rotate gear {13} for {14}.\n",
-                _moduleId,
-                count + 1,
-                _toDir9[move.LitClock],
-                _toDir4[move.LitPin],
+            Debug.LogFormat("[Rubik’s Clock #{0}] Moves to solve, move {1}:", _moduleId, count + 1);
+            Debug.LogFormat("[Rubik’s Clock #{0}] Lit clock: {1}. Lit pin: {2}.", _moduleId, _toDir9[move.LitClock], _toDir4[move.LitPin]);
+            Debug.LogFormat("[Rubik’s Clock #{0}] {1}, {2} ({3}). {4}, {5} ({6}).", _moduleId,
                 move.Modifications[0].Action.Description,
                 move.Modifications[0].Amount.Quantity,
                 move.Modifications[0].Amount.Description,
                 move.Modifications[1].Action.Description,
                 move.Modifications[1].Amount.Quantity,
-                move.Modifications[1].Amount.Description,
-                _toDir9[move.BigSquare],
-                _toDir4[move.SmallSquare],
+                move.Modifications[1].Amount.Description
+            );
+            Debug.LogFormat("[Rubik’s Clock #{0}] Big square: {1}, Small square: {2}.", _moduleId, _toDir9[move.BigSquare], _toDir4[move.SmallSquare]);
+            Debug.LogFormat("[Rubik’s Clock #{0}] Change pins {1}, Rotate gear {2} for {3}.", _moduleId,
                 String.Join(" and ", move.Pins.ConvertAll(i => _toDir4[i]).ToArray()),
                 _toDir4[move.Gear],
                 move.Amount

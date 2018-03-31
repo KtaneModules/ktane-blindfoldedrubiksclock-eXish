@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: rubiksClock
   title: "Rubik\u2019s Clock"
-  description: "Rubik's Clock v2.0\n\r\nManual: https://ktane.timwi.de/HTML/Rubik%E2%80%99s%20Clock.html\r\n\r\nModule
+  description: "Rubik's Clock v2.1\n\r\nManual: https://ktane.timwi.de/HTML/Rubik%E2%80%99s%20Clock.html\r\n\r\nModule
     ID: rubiksClock\r\n\r\nCreated by Groover#1027\r\nSpecial thanks to ashthebash#1367
     and Timwi#0551\r\n(find us on Discord:KTANE)"
   version: 1.0
