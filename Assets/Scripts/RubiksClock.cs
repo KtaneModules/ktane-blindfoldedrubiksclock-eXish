@@ -20,11 +20,6 @@ public class RubiksClock : MonoBehaviour
     public GameObject[] Clocks;
     public Material UnlitMaterial;
     public Material LitMaterial;
-    public string TwitchHelpMessage =
-        "Change a pin with '!{0} tl'."
-        + "  Rotate a gear with '!{0} br -3'."
-        + "  Turn over clock with '!{0} t' (or 'turn'), reset with '!{0} r' (or 'reset')."
-        + "  Commands can be combined with commas '!{0} tl, tr, br -3, t'";
 
     // Front:
     // 0 1
@@ -101,6 +96,17 @@ public class RubiksClock : MonoBehaviour
     private static int _moduleIdCounter = 1;
     private string[] _toDir4 = new string[] { "TL", "TR", "BL", "BR" };
     private string[] _toDir9 = new string[] { "TL", "T", "TR", "L", "M", "R", "BL", "B", "BR" };
+
+    // Twitch Plays specific
+#pragma warning disable 0414
+    private string TwitchManualCode = "Rubik%E2%80%99s Clock";
+    private string TwitchHelpMessage =
+        "Change a pin with '!{0} tl'."
+        + "  Rotate a gear with '!{0} br -3'."
+        + "  Turn over clock with '!{0} t' (or 'turn'), reset with '!{0} r' (or 'reset')."
+        + "  Tilt the clock to see what pins are up/down with '!{0} tilt."
+        + "  Commands can be combined with commas '!{0} tl, tr, br -3, t'";
+#pragma warning restore 0414
 
     // Called once at start
     void Start()
@@ -998,6 +1004,36 @@ public class RubiksClock : MonoBehaviour
         }
     }
 
+    private IEnumerator TiltCamera()
+    {
+        yield return null;
+        bool frontFace = transform.parent.parent.localEulerAngles.z < 45 || transform.parent.parent.localEulerAngles.z > 315;
+
+        float Angle = -30;
+        Vector3 lerpAngle = new Vector3(frontFace ? -Angle : Angle, 0, 0);
+
+        float currentTime = Time.time;
+        while (Time.time < (currentTime + 1.0f))
+        {
+            var lerp = Quaternion.Euler(Vector3.Lerp(Vector3.zero, lerpAngle, (Time.time - currentTime) / 1.0f)) ;
+            yield return new Quaternion[] { lerp, lerp };
+            yield return null;
+        }
+        yield return new Quaternion[] { Quaternion.Euler(lerpAngle), Quaternion.Euler(lerpAngle) };
+
+        yield return new WaitForSeconds(4.0f);
+
+        currentTime = Time.time;
+        while (Time.time < (currentTime + 1.0f))
+        {
+            var lerp = Quaternion.Euler(Vector3.Lerp(lerpAngle, Vector3.zero, (Time.time - currentTime) / 1.0f));
+            yield return new Quaternion[] { lerp, lerp };
+            yield return null;
+        }
+        yield return new Quaternion[] { Quaternion.Euler(Vector3.zero), Quaternion.Euler(Vector3.zero) };
+        yield return null;
+    }
+
     IEnumerator ProcessTwitchCommand(string commands)
     {
         var directions = new string[] { "tl", "tr", "bl", "br" };
@@ -1051,6 +1087,11 @@ public class RubiksClock : MonoBehaviour
                     return 0f;
                 });
             }
+
+            else if (parts.Length == 1 && (parts[0] == "tilt" || parts[0] == "rotate"))
+            {
+                actions.Add(TiltCamera);
+            }
             else
             {
                 yield break;
@@ -1066,6 +1107,11 @@ public class RubiksClock : MonoBehaviour
                 yield return new WaitForSeconds((float)result);
             else if (result is string)
                 yield return result;
+            else if (result is IEnumerator)
+            {
+                IEnumerator iResult = (IEnumerator) result;
+                while (iResult.MoveNext()) yield return iResult.Current;
+            }
         }
     }
 
