@@ -301,7 +301,7 @@ public class RubiksClock : MonoBehaviour
         });
 
         // Scramble
-        Scramble(3);
+        Scramble(4);
         for (int count = 0; count < _moves.Count; count++)
         {
             var move = _moves[count];
@@ -373,24 +373,37 @@ public class RubiksClock : MonoBehaviour
 
             do
             {
-                // Random lit pin and clock
+                // Random lit pin and clock, but not the same as previous move
+                int litPin;
+                int litClock;
+                bool same = true;
+                do
+                {
+                    litPin = Rnd.Range(0, 4);
+                    litClock = Rnd.Range(0, 9);
+                    same = (_moves.Count > 0) &&
+                        (_moves[_moves.Count - 1].LitPin == _mirror4[litPin]) &&
+                        (_moves[_moves.Count - 1].LitClock == _mirror4[litClock]);
+                }
+                while (same);
+
                 move = new Move()
                 {
-                    LitPin = Rnd.Range(0, 4),
-                    LitClock = Rnd.Range(0, 9),
+                    LitPin = litPin,
+                    LitClock = litClock,
                     OnFrontSide = onFrontSide,
 
                     // Determine modifications
                     Modifications = new Modification[] {
-                    new Modification() {
-                        Action = _manualModActions[(firstModificationAction1 + numMoves - 1 - curMove) % 12],
-                        Amount = _manualModAmounts[(firstModificationAmount1 + numMoves - 1 - curMove) % 12],
+                        new Modification() {
+                            Action = _manualModActions[(firstModificationAction1 + numMoves - 1 - curMove) % 12],
+                            Amount = _manualModAmounts[(firstModificationAmount1 + numMoves - 1 - curMove) % 12],
+                        },
+                        new Modification() {
+                            Action = _manualModActions[(firstModificationAction2 + numMoves - 1 - curMove) % 12],
+                            Amount = _manualModAmounts[(firstModificationAmount2 + numMoves - 1 - curMove) % 12],
+                        }
                     },
-                    new Modification() {
-                        Action = _manualModActions[(firstModificationAction2 + numMoves - 1 - curMove) % 12],
-                        Amount = _manualModAmounts[(firstModificationAmount2 + numMoves - 1 - curMove) % 12],
-                    }
-                },
                 };
 
                 // Apply "move" modifications
@@ -567,8 +580,6 @@ public class RubiksClock : MonoBehaviour
     {
         _onFrontSide = !_onFrontSide;
         _animationQueue.Enqueue(new TurnOverAction() { ToFrontSide = _onFrontSide });
-        //Module.Children = _onFrontSide ? _selectablesFront : _selectablesBack;
-        //Module.UpdateChildren();
 
         if (!_isScrambling && !_isResetting)
         {
@@ -1015,7 +1026,7 @@ public class RubiksClock : MonoBehaviour
         float currentTime = Time.time;
         while (Time.time < (currentTime + 1.0f))
         {
-            var lerp = Quaternion.Euler(Vector3.Lerp(Vector3.zero, lerpAngle, (Time.time - currentTime) / 1.0f)) ;
+            var lerp = Quaternion.Euler(Vector3.Lerp(Vector3.zero, lerpAngle, (Time.time - currentTime) / 1.0f));
             yield return new Quaternion[] { lerp, lerp };
             yield return null;
         }
@@ -1088,10 +1099,12 @@ public class RubiksClock : MonoBehaviour
                 });
             }
 
+            // tilt / rotate for Twitch Plays
             else if (parts.Length == 1 && (parts[0] == "tilt" || parts[0] == "rotate"))
             {
                 actions.Add(TiltCamera);
             }
+
             else
             {
                 yield break;
@@ -1109,7 +1122,7 @@ public class RubiksClock : MonoBehaviour
                 yield return result;
             else if (result is IEnumerator)
             {
-                IEnumerator iResult = (IEnumerator) result;
+                IEnumerator iResult = (IEnumerator)result;
                 while (iResult.MoveNext()) yield return iResult.Current;
             }
         }

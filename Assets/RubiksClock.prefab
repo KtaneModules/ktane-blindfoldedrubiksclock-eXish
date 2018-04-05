@@ -6791,9 +6791,6 @@ MonoBehaviour:
   - {fileID: 1041473616240888}
   UnlitMaterial: {fileID: 2100000, guid: b2cd3e578e724a2438fdc2da96062332, type: 2}
   LitMaterial: {fileID: 2100000, guid: 7efb6d6ba3458f5468e2f51bf51f8b72, type: 2}
-  TwitchHelpMessage: Change a pin with '!{0} tl'.  Rotate a gear with '!{0} br 3'.  Turn
-    over clock with '!{0} turn' (or 't'), reset with '!{0} reset' (or 'r').  Commands
-    can be combined with commas '!{0} tl, br -3, t'
 --- !u!114 &114463421581118840
 MonoBehaviour:
   m_ObjectHideFlags: 1
