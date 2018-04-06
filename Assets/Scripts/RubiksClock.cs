@@ -382,8 +382,8 @@ public class RubiksClock : MonoBehaviour
                     litPin = Rnd.Range(0, 4);
                     litClock = Rnd.Range(0, 9);
                     same = (_moves.Count > 0) &&
-                        (_moves[_moves.Count - 1].LitPin == _mirror4[litPin]) &&
-                        (_moves[_moves.Count - 1].LitClock == _mirror4[litClock]);
+                        (_moves[0].LitPin == _mirror4[litPin]) &&
+                        (_moves[0].LitClock == _mirror9[litClock]);
                 }
                 while (same);
 
@@ -613,7 +613,7 @@ public class RubiksClock : MonoBehaviour
         }
         if (_moves[0].OnFrontSide != _onFrontSide)
         {
-            _animationQueue.Enqueue(new TurnOverAction());
+            _animationQueue.Enqueue(new TurnOverAction() { ToFrontSide = _moves[0].OnFrontSide });
         }
 
         // Reset to initial scrambled state
