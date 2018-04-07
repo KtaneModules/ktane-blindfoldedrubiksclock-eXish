@@ -652,7 +652,7 @@ public class RubiksClock : MonoBehaviour
                 msgs.Add("Turn over to the " + (turnOverAction.ToFrontSide ? "front" : "back") + " side.");
             }
         }
-        return String.Join("\n", msgs.ToArray());
+        return String.Join(string.Format("\n[Rubik’s Clock #{0}] ", _moduleId), msgs.ToArray());
     }
 
     private void PressPinButton(int i)
