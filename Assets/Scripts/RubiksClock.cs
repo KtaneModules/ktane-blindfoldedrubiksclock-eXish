@@ -1112,6 +1112,7 @@ public class RubiksClock : MonoBehaviour
 
             else
             {
+                yield return string.Format("sendtochaterror bad move: '{0}'. Use help to see what the valid commands are.", command);
                 yield break;
             }
         }
@@ -1120,7 +1121,10 @@ public class RubiksClock : MonoBehaviour
         {
             var result = action();
             if (result == null)
+            {
+                yield return "sendtochaterror Something bad happened.";
                 yield break;
+            }
             else if (result is float)
                 yield return new WaitForSeconds((float)result);
             else if (result is string)
