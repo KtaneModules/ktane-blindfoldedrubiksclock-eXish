@@ -1069,7 +1069,7 @@ public class RubiksClock : MonoBehaviour
                     RotateGear(_onFrontSide ? index : _mirror4[index], _onFrontSide ? amount : -amount);
                     CheckState();
                     if (_isSolved) return "solve";
-                    return 0f;
+                    return 0.1f;
                 });
             }
 
@@ -1080,7 +1080,7 @@ public class RubiksClock : MonoBehaviour
                 {
                     var index = Array.FindIndex(directions, row => row == parts[0]);
                     ChangePin(_onFrontSide ? index : _mirror4[index]);
-                    return 0f;
+                    return 0.1f;
                 });
             }
 
@@ -1090,7 +1090,7 @@ public class RubiksClock : MonoBehaviour
                 actions.Add(() =>
                 {
                     PressTurnOver();
-                    return 0f;
+                    return 0.1f;
                 });
             }
 
@@ -1100,7 +1100,7 @@ public class RubiksClock : MonoBehaviour
                 actions.Add(() =>
                 {
                     PressReset();
-                    return 0f;
+                    return 0.1f;
                 });
             }
 
