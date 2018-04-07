@@ -879,7 +879,6 @@ public class RubiksClock : MonoBehaviour
             _isSolved = true;
             LightPinAndClock(new Move() { LitClock = -1, LitPin = -1 });
             Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed to solve: {1}", _moduleId, FormatActions());
-            GetComponent<KMBombModule>().HandlePass();
         }
 
         // If the clocks are in the starting position of a move
@@ -900,6 +899,12 @@ public class RubiksClock : MonoBehaviour
         {
             while (_animationQueue.Count == 0)
             {
+                if (_isSolved)
+                {
+                    GetComponent<KMBombModule>().HandlePass();
+                    yield break;
+                }
+
                 yield return null;
             }
 
