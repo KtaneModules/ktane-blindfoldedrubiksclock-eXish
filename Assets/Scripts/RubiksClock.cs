@@ -1117,6 +1117,10 @@ public class RubiksClock : MonoBehaviour
             }
         }
 
+        //Make sure the module is focused before performing any actions.
+        if (actions.Count > 0)
+            yield return null; 
+
         foreach (var action in actions)
         {
             var result = action();
