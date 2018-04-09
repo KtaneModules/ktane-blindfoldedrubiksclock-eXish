@@ -652,7 +652,7 @@ public class RubiksClock : MonoBehaviour
                 msgs.Add("Turn over to the " + (turnOverAction.ToFrontSide ? "front" : "back") + " side.");
             }
         }
-        return String.Join("\n", msgs.ToArray());
+        return String.Join(string.Format("\n[Rubik’s Clock #{0}] ", _moduleId), msgs.ToArray());
     }
 
     private void PressPinButton(int i)
@@ -879,7 +879,6 @@ public class RubiksClock : MonoBehaviour
             _isSolved = true;
             LightPinAndClock(new Move() { LitClock = -1, LitPin = -1 });
             Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed to solve: {1}", _moduleId, FormatActions());
-            GetComponent<KMBombModule>().HandlePass();
         }
 
         // If the clocks are in the starting position of a move
@@ -900,6 +899,12 @@ public class RubiksClock : MonoBehaviour
         {
             while (_animationQueue.Count == 0)
             {
+                if (_isSolved)
+                {
+                    GetComponent<KMBombModule>().HandlePass();
+                    yield break;
+                }
+
                 yield return null;
             }
 
@@ -1064,7 +1069,7 @@ public class RubiksClock : MonoBehaviour
                     RotateGear(_onFrontSide ? index : _mirror4[index], _onFrontSide ? amount : -amount);
                     CheckState();
                     if (_isSolved) return "solve";
-                    return 0f;
+                    return 0.1f;
                 });
             }
 
@@ -1075,7 +1080,7 @@ public class RubiksClock : MonoBehaviour
                 {
                     var index = Array.FindIndex(directions, row => row == parts[0]);
                     ChangePin(_onFrontSide ? index : _mirror4[index]);
-                    return 0f;
+                    return 0.1f;
                 });
             }
 
@@ -1085,7 +1090,7 @@ public class RubiksClock : MonoBehaviour
                 actions.Add(() =>
                 {
                     PressTurnOver();
-                    return 0f;
+                    return 0.1f;
                 });
             }
 
@@ -1095,7 +1100,7 @@ public class RubiksClock : MonoBehaviour
                 actions.Add(() =>
                 {
                     PressReset();
-                    return 0f;
+                    return 0.1f;
                 });
             }
 
@@ -1107,15 +1112,23 @@ public class RubiksClock : MonoBehaviour
 
             else
             {
+                yield return string.Format("sendtochaterror bad move: '{0}'. Use help to see what the valid commands are.", command);
                 yield break;
             }
         }
+
+        //Make sure the module is focused before performing any actions.
+        if (actions.Count > 0)
+            yield return null; 
 
         foreach (var action in actions)
         {
             var result = action();
             if (result == null)
+            {
+                yield return "sendtochaterror Something bad happened.";
                 yield break;
+            }
             else if (result is float)
                 yield return new WaitForSeconds((float)result);
             else if (result is string)
