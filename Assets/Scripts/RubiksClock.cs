@@ -105,7 +105,7 @@ public class RubiksClock : MonoBehaviour
         + "  Rotate a gear with '!{0} br -3'."
         + "  Turn over clock with '!{0} t' (or 'turn'), reset with '!{0} r' (or 'reset')."
         + "  Tilt the clock to see what pins are up/down with '!{0} tilt."
-        + "  Commands can be combined with commas '!{0} tl, tr, br -3, t'";
+        + "  Commands can be combined with spaces '!{0} tl tr br -3 t'";
 #pragma warning restore 0414
 
     // Called once at start
@@ -1055,37 +1055,41 @@ public class RubiksClock : MonoBehaviour
         var directions = new string[] { "tl", "tr", "bl", "br" };
         var actions = new List<Func<object>>();
 
-        foreach (var command in commands.ToLowerInvariant().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+        var parts = commands.ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        for (var i = 0; i < parts.Length; i++)
         {
             int amount;
-            var parts = command.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            // {direction} {amount} = rotate gear
-            if (parts.Length == 2 && directions.Contains(parts[0]) && int.TryParse(parts[1], out amount))
+            if (directions.Contains(parts[i]))
             {
-                actions.Add(() =>
-                {
-                    var index = Array.FindIndex(directions, row => row == parts[0]);
-                    RotateGear(_onFrontSide ? index : _mirror4[index], _onFrontSide ? amount : -amount);
-                    CheckState();
-                    if (_isSolved) return "solve";
-                    return 0.1f;
-                });
-            }
+                var index = Array.FindIndex(directions, row => row == parts[i]);
 
-            // {direction} = change pin
-            else if (parts.Length == 1 && directions.Contains(parts[0]))
-            {
-                actions.Add(() =>
+                // {direction} {amount} = rotate gear
+                if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out amount))
                 {
-                    var index = Array.FindIndex(directions, row => row == parts[0]);
-                    ChangePin(_onFrontSide ? index : _mirror4[index]);
-                    return 0.1f;
-                });
+                    actions.Add(() =>
+                    {
+                        RotateGear(_onFrontSide ? index : _mirror4[index], _onFrontSide ? amount : -amount);
+                        CheckState();
+                        if (_isSolved) return "solve";
+                        return 0.1f;
+                    });
+                    i++;
+                }
+
+                // {direction} = change pin
+                else
+                {
+                    actions.Add(() =>
+                    {
+                        ChangePin(_onFrontSide ? index : _mirror4[index]);
+                        return 0.1f;
+                    });
+                }
             }
 
             // t = turn over
-            else if (parts.Length == 1 && (parts[0] == "t" || parts[0] == "turn"))
+            else if (parts[i] == "t" || parts[i] == "turn")
             {
                 actions.Add(() =>
                 {
@@ -1095,7 +1099,7 @@ public class RubiksClock : MonoBehaviour
             }
 
             // r = reset
-            else if (parts.Length == 1 && (parts[0] == "r" || parts[0] == "reset"))
+            else if (parts[i] == "r" || parts[i] == "reset")
             {
                 actions.Add(() =>
                 {
@@ -1105,21 +1109,21 @@ public class RubiksClock : MonoBehaviour
             }
 
             // tilt / rotate for Twitch Plays
-            else if (parts.Length == 1 && (parts[0] == "tilt" || parts[0] == "rotate"))
+            else if (parts[i] == "tilt" || parts[i] == "rotate")
             {
                 actions.Add(TiltCamera);
             }
 
+            // bad move
             else
             {
-                yield return string.Format("sendtochaterror bad move: '{0}'. Use help to see what the valid commands are.", command);
+                yield return string.Format("sendtochaterror bad move: '{0}'. Use help to see what the valid commands are.", parts[i]);
                 yield break;
             }
         }
 
-        //Make sure the module is focused before performing any actions.
-        if (actions.Count > 0)
-            yield return null; 
+        // Make sure the module is focused before performing any actions
+        if (actions.Count > 0) yield return null; 
 
         foreach (var action in actions)
         {
