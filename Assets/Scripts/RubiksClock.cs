@@ -138,7 +138,7 @@ public class RubiksClock : MonoBehaviour
         {
             if (!_isSolved && _actionLog.Count > 0)
             {
-                Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed before bomb exploded: {1}", _moduleId, FormatActions());
+                Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed before bomb exploded:{1}", _moduleId, FormatActions());
             }
         };
 
@@ -306,8 +306,8 @@ public class RubiksClock : MonoBehaviour
         {
             var move = _moves[count];
             Debug.LogFormat("[Rubik’s Clock #{0}] Moves to solve, move {1}:", _moduleId, count + 1);
-            Debug.LogFormat("[Rubik’s Clock #{0}] Lit clock: {1}. Lit pin: {2}.", _moduleId, _toDir9[move.LitClock], _toDir4[move.LitPin]);
-            Debug.LogFormat("[Rubik’s Clock #{0}] {1}, {2} ({3}). {4}, {5} ({6}).", _moduleId,
+            Debug.LogFormat("[Rubik’s Clock #{0}] - Lit clock: {1}. Lit pin: {2}.", _moduleId, _toDir9[move.LitClock], _toDir4[move.LitPin]);
+            Debug.LogFormat("[Rubik’s Clock #{0}] - {1}, {2} ({3}). {4}, {5} ({6}).", _moduleId,
                 move.Modifications[0].Action.Description,
                 move.Modifications[0].Amount.Quantity,
                 move.Modifications[0].Amount.Description,
@@ -315,8 +315,8 @@ public class RubiksClock : MonoBehaviour
                 move.Modifications[1].Amount.Quantity,
                 move.Modifications[1].Amount.Description
             );
-            Debug.LogFormat("[Rubik’s Clock #{0}] Big square: {1}, Small square: {2}.", _moduleId, _toDir9[move.BigSquare], _toDir4[move.SmallSquare]);
-            Debug.LogFormat("[Rubik’s Clock #{0}] Change pins {1}, Rotate gear {2} for {3}.", _moduleId,
+            Debug.LogFormat("[Rubik’s Clock #{0}] - Big square: {1}, Small square: {2}.", _moduleId, _toDir9[move.BigSquare], _toDir4[move.SmallSquare]);
+            Debug.LogFormat("[Rubik’s Clock #{0}] - Change pins {1}, Rotate gear {2} for {3}.", _moduleId,
                 String.Join(" and ", move.Pins.ConvertAll(i => _toDir4[i]).ToArray()),
                 _toDir4[move.Gear],
                 move.Amount
@@ -603,7 +603,7 @@ public class RubiksClock : MonoBehaviour
         _isResetting = true;
 
         // Log actions and clean action log
-        Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed before reset: {1}", _moduleId, FormatActions());
+        Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed before reset:{1}", _moduleId, FormatActions());
         _actionLog = new List<IAction>();
 
         // Pour reset stack into animation queue
@@ -632,24 +632,24 @@ public class RubiksClock : MonoBehaviour
             return "None.";
         }
 
-        var msgs = new List<string>();
+        var msgs = new List<string>() { "" };
         foreach (var action in _actionLog)
         {
             if (action is GearAction)
             {
                 var gearAction = (GearAction)action;
-                msgs.Add("Rotate gear " + (_toDir4[gearAction.OnFrontSide ? gearAction.Gear : _mirror4[gearAction.Gear]])
+                msgs.Add("- Rotate gear " + (_toDir4[gearAction.OnFrontSide ? gearAction.Gear : _mirror4[gearAction.Gear]])
                     + " for " + (gearAction.OnFrontSide ? gearAction.Amount : -gearAction.Amount) + ".");
             }
             else if (action is PinAction)
             {
                 var pinAction = (PinAction)action;
-                msgs.Add("Change pin " + (_toDir4[pinAction.OnFrontSide ? pinAction.Pin : _mirror4[pinAction.Pin]]) + ".");
+                msgs.Add("- Change pin " + (_toDir4[pinAction.OnFrontSide ? pinAction.Pin : _mirror4[pinAction.Pin]]) + ".");
             }
             else if (action is TurnOverAction)
             {
                 var turnOverAction = (TurnOverAction)action;
-                msgs.Add("Turn over to the " + (turnOverAction.ToFrontSide ? "front" : "back") + " side.");
+                msgs.Add("- Turn over to the " + (turnOverAction.ToFrontSide ? "front" : "back") + " side.");
             }
         }
         return String.Join(string.Format("\n[Rubik’s Clock #{0}] ", _moduleId), msgs.ToArray());
@@ -878,7 +878,7 @@ public class RubiksClock : MonoBehaviour
             // The module is solved
             _isSolved = true;
             LightPinAndClock(new Move() { LitClock = -1, LitPin = -1 });
-            Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed to solve: {1}", _moduleId, FormatActions());
+            Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed to solve:{1}", _moduleId, FormatActions());
         }
 
         // If the clocks are in the starting position of a move
