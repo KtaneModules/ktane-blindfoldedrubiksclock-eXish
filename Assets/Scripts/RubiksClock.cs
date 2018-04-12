@@ -1055,7 +1055,7 @@ public class RubiksClock : MonoBehaviour
         var directions = new string[] { "tl", "tr", "bl", "br" };
         var actions = new List<Func<object>>();
 
-        var parts = commands.ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        var parts = commands.Replace(",", string.Empty).ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         for (var i = 0; i < parts.Length; i++)
         {
             int amount;
