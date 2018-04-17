@@ -351,14 +351,20 @@ public class RubiksClock : MonoBehaviour
 
         // Determine first modifications, using ascii conversion to convert ABC to 0, DEF to 1, etc.
         var sn = Bomb.GetSerialNumber();
-        var firstModificationAction1 = (Char.IsDigit(sn[0]) ? (int)sn[0] - 22 : (int)sn[0] - 65) / 3;
-        var firstModificationAmount1 = (Char.IsDigit(sn[1]) ? (int)sn[1] - 22 : (int)sn[1] - 65) / 3;
-        var firstModificationAction2 = (Char.IsDigit(sn[2]) ? (int)sn[2] - 22 : (int)sn[2] - 65) / 3;
-        var firstModificationAmount2 = (Char.IsDigit(sn[3]) ? (int)sn[3] - 22 : (int)sn[3] - 65) / 3;
+        var firstModificationAction1 = (Char.IsLetter(sn[0]) ? sn[0] - 'A' : sn[0] - '0' + 26) / 3;
+        var firstModificationAmount1 = (Char.IsLetter(sn[1]) ? sn[1] - 'A' : sn[1] - '0' + 26) / 3;
+        var firstModificationAction2 = (Char.IsLetter(sn[2]) ? sn[2] - 'A' : sn[2] - '0' + 26) / 3;
+        var firstModificationAmount2 = (Char.IsLetter(sn[3]) ? sn[3] - 'A' : sn[3] - '0' + 26) / 3;
         Debug.LogFormat(
             "[Rubik’s Clock #{0}] Initial modifications: Action 1: row {1}. Amount 1: row {2}. Action 2: row {3}. Amount 2: row {4}",
             _moduleId, firstModificationAction1 + 1, firstModificationAmount1 + 1, firstModificationAction2 + 1, firstModificationAmount2 + 1
         );
+
+        // Random end position for pins
+        for (var i = 0; i < 4; i++)
+        {
+            if (Rnd.Range(0, 2) == 0) ChangePin(i);
+        }
 
         // Apply moves
         for (var curMove = 0; curMove < numMoves; curMove++)
@@ -532,35 +538,6 @@ public class RubiksClock : MonoBehaviour
         _isScrambling = false;
     }
 
-    private void LightPinAndClock(Move move)
-    {
-        var litPin = -1;
-        var litClockFront = -1;
-        var litClockBack = -1;
-        if (move.LitPin >= 0)
-        {
-            litPin = move.OnFrontSide ? move.LitPin : _mirror4[move.LitPin];
-            litClockFront = move.OnFrontSide ? move.LitClock : _mirror9[move.LitClock];
-            litClockBack = move.OnFrontSide ? (move.LitClock + 9) : (_mirror9[move.LitClock] + 9);
-        }
-        var lit = false;
-
-        for (var i = 0; i < Pins.Length; i++)
-        {
-            lit = (i == litPin);
-            Pins[i].transform.Find("LightFront").GetComponent<Light>().enabled = lit;
-            Pins[i].transform.Find("LightBack").GetComponent<Light>().enabled = lit;
-            Pins[i].GetComponent<Renderer>().material = (lit ? LitMaterial : UnlitMaterial);
-        }
-
-        for (var i = 0; i < Clocks.Length; i++)
-        {
-            lit = (i == litClockFront || i == litClockBack);
-            Clocks[i].transform.Find("Light").GetComponent<Light>().enabled = lit;
-            Clocks[i].GetComponent<Renderer>().material = (lit ? LitMaterial : UnlitMaterial);
-        }
-    }
-
     // Called once per frame
     void Update()
     {
@@ -620,7 +597,7 @@ public class RubiksClock : MonoBehaviour
         _clocks = (int[])_moves[0].ClocksAtStart.Clone();
         _pins = (bool[])_moves[0].PinsAtStart.Clone();
         _onFrontSide = _moves[0].OnFrontSide;
-        LightPinAndClock(_moves[0]);
+        _animationQueue.Enqueue(new LightPinAndClockAction() { Pin = _moves[0].LitPin, Clock = _moves[0].LitClock, OnFrontSide = _moves[0].OnFrontSide });
 
         _isResetting = false;
     }
@@ -877,7 +854,7 @@ public class RubiksClock : MonoBehaviour
         {
             // The module is solved
             _isSolved = true;
-            LightPinAndClock(new Move() { LitClock = -1, LitPin = -1 });
+            _animationQueue.Enqueue(new LightPinAndClockAction() { Pin = -1, Clock = -1 });
             Debug.LogFormat("[Rubik’s Clock #{0}] Actions performed to solve:{1}", _moduleId, FormatActions());
         }
 
@@ -887,7 +864,7 @@ public class RubiksClock : MonoBehaviour
             // Light the pin and clock belonging to the move
             if (_clocks.SequenceEqual(move.ClocksAtStart) && _pins.SequenceEqual(move.PinsAtStart))
             {
-                LightPinAndClock(move);
+                _animationQueue.Enqueue(new LightPinAndClockAction() { Pin = move.LitPin, Clock = move.LitClock, OnFrontSide = move.OnFrontSide });
                 break;
             }
         }
@@ -895,6 +872,7 @@ public class RubiksClock : MonoBehaviour
 
     private IEnumerator AnimateMovements()
     {
+        yield return new WaitForSeconds(2f);
         while (true)
         {
             while (_animationQueue.Count == 0)
@@ -908,12 +886,12 @@ public class RubiksClock : MonoBehaviour
                 yield return null;
             }
 
-            var action = _animationQueue.Dequeue();
+            var queuedAction = _animationQueue.Dequeue();
 
-            if (action is GearAction)
+            if (queuedAction is GearAction)
             {
-                var gearAction = (GearAction)action;
-                var hourChanges = gearAction.HourChanges;
+                var action = (GearAction)queuedAction;
+                var hourChanges = action.HourChanges;
                 var initialRotations = new Vector3[hourChanges.Length];
                 var targetRotations = new Vector3[hourChanges.Length];
                 for (var i = 0; i < hourChanges.Length; i++)
@@ -926,7 +904,7 @@ public class RubiksClock : MonoBehaviour
                     );
                 }
 
-                var hoursToChange = gearAction.HourChanges.Max(i => Math.Abs(i));
+                var hoursToChange = action.HourChanges.Max(i => Math.Abs(i));
                 var hoursPassed = 0;
                 var duration = .2f * hoursToChange;
                 var elapsed = 0f;
@@ -953,14 +931,14 @@ public class RubiksClock : MonoBehaviour
                     }
                 }
             }
-            else if (action is PinAction)
+            else if (queuedAction is PinAction)
             {
                 GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
                 GetComponent<KMSelectable>().AddInteractionPunch(.3f);
 
-                var pinAction = (PinAction)action;
-                var pin = pinAction.Pin;
-                var position = pinAction.Position;
+                var action = (PinAction)queuedAction;
+                var pin = action.Pin;
+                var position = action.Position;
                 var initialPosition = Pins[pin].transform.localPosition;
                 var targetPosition = new Vector3(
                     Pins[pin].transform.localPosition.x,
@@ -982,14 +960,14 @@ public class RubiksClock : MonoBehaviour
                     );
                 }
             }
-            else if (action is TurnOverAction)
+            else if (queuedAction is TurnOverAction)
             {
-                var turnOverAction = (TurnOverAction)action;
+                var action = (TurnOverAction)queuedAction;
                 var initialRotation = ClockPuzzle.transform.localEulerAngles;
                 var targetRotation = new Vector3(
                     ClockPuzzle.transform.localEulerAngles.x,
                     ClockPuzzle.transform.localEulerAngles.y,
-                    turnOverAction.ToFrontSide ? 0 : 180
+                    action.ToFrontSide ? 0 : 180
                 );
                 var initialPosition = ClockPuzzle.transform.localPosition;
                 var targetPosition = new Vector3(
@@ -1015,6 +993,37 @@ public class RubiksClock : MonoBehaviour
                         targetPosition,
                         Mathf.SmoothStep(0.0f, 1.0f, elapsed < (duration / 2) ? (elapsed / duration * 2) : (elapsed / duration * -2 + 2))
                     );
+                }
+            }
+            else if (queuedAction is LightPinAndClockAction)
+            {
+                yield return new WaitForSeconds(.1f);
+
+                var action = (LightPinAndClockAction)queuedAction;
+                var litPin = -1;
+                var litClockFront = -1;
+                var litClockBack = -1;
+                if (action.Pin >= 0)
+                {
+                    litPin = action.OnFrontSide ? action.Pin : _mirror4[action.Pin];
+                    litClockFront = action.OnFrontSide ? action.Clock : _mirror9[action.Clock];
+                    litClockBack = action.OnFrontSide ? (action.Clock + 9) : (_mirror9[action.Clock] + 9);
+                }
+                var lit = false;
+
+                for (var i = 0; i < Pins.Length; i++)
+                {
+                    lit = (i == litPin);
+                    Pins[i].transform.Find("LightFront").GetComponent<Light>().enabled = lit;
+                    Pins[i].transform.Find("LightBack").GetComponent<Light>().enabled = lit;
+                    Pins[i].GetComponent<Renderer>().material = (lit ? LitMaterial : UnlitMaterial);
+                }
+
+                for (var i = 0; i < Clocks.Length; i++)
+                {
+                    lit = (i == litClockFront || i == litClockBack);
+                    Clocks[i].transform.Find("Light").GetComponent<Light>().enabled = lit;
+                    Clocks[i].GetComponent<Renderer>().material = (lit ? LitMaterial : UnlitMaterial);
                 }
             }
         }
@@ -1219,5 +1228,12 @@ public class RubiksClock : MonoBehaviour
     struct TurnOverAction : IAction
     {
         public bool ToFrontSide { get; set; }
+    }
+
+    struct LightPinAndClockAction : IAction
+    {
+        public int Pin { get; set; }
+        public int Clock { get; set; }
+        public bool OnFrontSide { get; set; }
     }
 }
