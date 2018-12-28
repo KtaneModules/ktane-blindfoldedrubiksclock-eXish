@@ -128,6 +128,19 @@ public class RubiksClock : MonoBehaviour
             _pins[i] = true;
         }
 
+        // Scale pin lights
+        for (var i = 0; i < Pins.Length; i++)
+        {
+            Pins[i].transform.Find("LightFront").GetComponent<Light>().range *= transform.lossyScale.x;
+            Pins[i].transform.Find("LightBack").GetComponent<Light>().range *= transform.lossyScale.x;
+        }
+
+        // Scale clock lights
+        for (var i = 0; i < Clocks.Length; i++)
+        {
+            Clocks[i].transform.Find("Light").GetComponent<Light>().range *= transform.lossyScale.x;
+        }
+
         // Turn over
         TurnOverButton.OnInteract += delegate () { PressTurnOver(); return false; };
 
