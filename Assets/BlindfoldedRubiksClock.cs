@@ -83,7 +83,7 @@ public class BlindfoldedRubiksClock : MonoBehaviour
     private Queue<IAction> _animationQueue = new Queue<IAction>();
     private Stack<IAction> _resetStack = new Stack<IAction>();
     private List<IAction> _actionLog = new List<IAction>();
-    private bool _isScrambling, _isResetting, _isSolved;
+    private bool _isScrambling, _isResetting, _isSolved, _realSolve;
 
     // Convert pin index to the other side
     private int[] _mirror4 = new int[] { 1, 0, 3, 2 };
@@ -893,6 +893,7 @@ public class BlindfoldedRubiksClock : MonoBehaviour
                 if (_isSolved)
                 {
                     GetComponent<KMBombModule>().HandlePass();
+                    _realSolve = true;
                     yield break;
                 }
 
@@ -1165,6 +1166,35 @@ public class BlindfoldedRubiksClock : MonoBehaviour
                 while (iResult.MoveNext()) yield return iResult.Current;
             }
         }
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        while (_isScrambling) yield return true;
+        if (_actionLog.Count > 0)
+            ResetButton.OnInteract();
+        while (_isResetting) yield return true;
+        bool onFront = true;
+        for (int i = 0; i < _moves.Count; i++)
+        {
+            if ((!_moves[i].OnFrontSide && onFront) || (_moves[i].OnFrontSide && !onFront))
+            {
+                TurnOverButton.OnInteract();
+                yield return new WaitForSeconds(.1f);
+                onFront = !onFront;
+            }
+            for (int j = 0; j < _moves[i].Pins.Count; j++)
+            {
+                PinButtons[_moves[i].Pins[j]].OnInteract();
+                yield return new WaitForSeconds(.1f);
+            }
+            for (int j = 0; j < Math.Abs(_moves[i].Amount); j++)
+            {
+                GearButtons[_moves[i].Amount < 0 ? (_moves[i].Gear * 2) : (_moves[i].Gear * 2 + 1)].OnInteract();
+                yield return new WaitForSeconds(.1f);
+            }
+        }
+        while (!_realSolve) yield return true;
     }
 
     /**
